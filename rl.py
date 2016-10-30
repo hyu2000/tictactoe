@@ -41,7 +41,7 @@ class QTable(object):
         self.v = {}
         self.value_func = value_func
 
-        self.count_updates = 0
+        self.total_num_updates = 0
 
     def representation(self, board):
         return tuple(board[0]), tuple(board[1]), tuple(board[2])
@@ -61,10 +61,10 @@ class QTable(object):
     def update(self, board_repr, val):
         _, count = self.v[board_repr]
         self.v[board_repr] = val, count + 1
-        self.count_updates += 1
+        self.total_num_updates += 1
 
     def stats(self):
-        return len(self.v), self.count_updates
+        return len(self.v), self.total_num_updates
 
     def save(self, filename):
         with open(filename, 'w') as f:
@@ -119,7 +119,7 @@ class RLStrat(Strategy):
         self.prev_board_rep = self.q_table.representation(board)
         board[row][col] = TTT.EMPTY
         self.prev_move = row, col
-        return self.prev_move
+        return row, col
 
     def _next_move(self, board):
         if random.random() < self.explore_rate:

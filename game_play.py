@@ -145,13 +145,13 @@ def run_RL_as_X():
 
 def run_manual():
     from strategies import RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1
-    strat1 = DefensiveStrat1()
-    strat2 = DefensiveStrat1()
-    game = GamePlay(strat1, strat2)
+    strat1 = RobertStrat1()
+    strat2 = Human()
+    game = GamePlay(strat2, strat1)
     game.run()
-    game.run_tournament(5000)
+    # game.run_tournament(5000)
 
 if __name__ == '__main__':
     random.seed(time.time())
-    run_RL_as_X()
-    # run_manual()
+    # run_RL_as_X()
+    run_manual()
