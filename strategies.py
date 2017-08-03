@@ -5,8 +5,13 @@ from game_play import Strategy, gameover
 
 
 class RandomPlay(Strategy):
+    """ baseline random strategy
+    """
     def __init__(self):
         pass
+
+    def name(self):
+        return 'random'
 
     def next_move(self, board, role):
         num_empty_spots = num_empty_squares(board)
@@ -60,6 +65,9 @@ class RobertStrat1(Strategy):
         self.baseline = RandomPlay()
         self.debug = debug
 
+    def name(self):
+        return 'RobertStrat'
+
     def next_move(self, board, role):
         for irow in range(3):
             row = board[irow]
@@ -77,8 +85,14 @@ class RobertStrat1(Strategy):
 
 
 class MinMaxStrat(Strategy):
+    """ the deep search strategy, assuming opponent plays optimally
+    """
+
     def __init__(self, verbose=False):
         self.verbose = verbose
+
+    def name(self):
+        return 'MinMax'
 
     def next_move(self, board, role):
         best_result, best_move = self.eval_board(board, role)
@@ -113,10 +127,15 @@ class MinMaxStrat(Strategy):
 
 
 class DefensiveStrat1(Strategy):
+    """ another hand-crafted strategy
+    """
     def __init__(self, level=1, debug=False):
         self.baseline = RandomPlay()
         self.level = level
         self.debug = debug
+
+    def name(self):
+        return 'DefensiveStrat'
 
     def next_move(self, board, role):
         opponent = TTT.reverse_role(role)

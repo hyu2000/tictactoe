@@ -11,6 +11,9 @@ PARAM_FILE = '/tmp/rl.pickle'
 
 
 class Strategy(object):
+    def name(self):
+        return 'abstract strategy'
+
     def next_move(self, board, role):
         """
         :param board:
@@ -21,6 +24,12 @@ class Strategy(object):
 
 
 class Human(Strategy):
+    def __init__(self, name='human'):
+        self.name = name
+
+    def name(self):
+        return self.name
+
     def next_move(self, board, role):
         while True:
             action = raw_input('Your move (row,col) or index (row-major)? ')
@@ -59,6 +68,9 @@ def gameover(board):
 class GamePlay(object):
     def __init__(self, strategy_x, strategy_o):
         self.players = [strategy_x, strategy_o]
+
+    def opponents(self):
+        return '%s vs %s' % (self.players[0].name(), self.players[1].name())
 
     def run(self, verbose=True):
         board = TTT.emptystate()
@@ -103,21 +115,21 @@ class GamePlay(object):
             result = self.run(verbose=False)
             counter[result] += 1
         percentage = [float(counter[result]) / N for result in (GameResult.X_WINS, GameResult.O_WINS, GameResult.DRAW)]
-        print '%d runs: %s' % (N, percentage)
+        print '%d runs: (X win, X lose, tie) = %s' % (N, percentage)
 
 
 def train_RL(strat1, game):
     explore_rate = 0.01
     for i in range(10):
         strat1.set_explore_rate(explore_rate)
-        game.run_tournament(N=5000)
+        game.run_tournament(N=500)
         print 'q_table size = ', strat1.q_table.stats()
         # explore_rate /= 2
     strat1.q_table.save(PARAM_FILE)
 
 
 def test_RL(strat_rl, game):
-    print 'Evaluation:'
+    print 'Evaluating ', game.opponents()
     strat_rl.set_explore_rate(0)
     strat_rl.set_learn_rate(0)
 
@@ -128,30 +140,34 @@ def test_RL(strat_rl, game):
     game.run_tournament(1000)
 
 
-
 def run_RL_as_X():
+    """
+    train an RL strategy, then test it. Training RL takes a bit of time, so we auto-save/load a parameter
+    file (in PARAM_FILE)
+    """
     from strategies import RobertStrat1, MinMaxStrat, DefensiveStrat1
     from rl import RLStrat
     strat1 = RLStrat(TTT.PLAYER_X, 0.1)
-    strat2 = RLStrat(TTT.PLAYER_O, 0.1)
+    strat2 = RobertStrat1()  # pick your favorite player
     game = GamePlay(strat1, strat2)
     if os.path.exists(PARAM_FILE):
         strat1.q_table.load(PARAM_FILE)
-        strat2.q_table.load(PARAM_FILE)
 
-    # train_RL(strat1, game)
-    test_RL (strat1, game)
+    train_RL(strat1, game)
+    test_RL(strat1, game)
 
 
 def run_manual():
+    """ play a manual game vs a strategy of your choice
+    """
     from strategies import RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1
-    strat1 = RobertStrat1()
-    strat2 = Human()
-    game = GamePlay(strat2, strat1)
+    strat1 = Human()
+    strat2 = MinMaxStrat()  # pick your favorite player!
+    game = GamePlay(strat1, strat2)
     game.run()
     # game.run_tournament(5000)
 
 if __name__ == '__main__':
     random.seed(time.time())
-    # run_RL_as_X()
-    run_manual()
+    run_RL_as_X()
+    # run_manual()

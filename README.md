@@ -10,6 +10,10 @@ https://github.com/tansey/rl-tictactoe.git
 
 Code is refactored as we go, but hopefully you will find it reasonably structured.
 
+To Play
+-------
+Run game_play.py. You can try run_manual() to play a game yourself.
+
 Theory
 -------
 We follow this update rule per Wes:

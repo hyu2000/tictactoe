@@ -76,8 +76,7 @@ class QTable(object):
 
 
 class RLStrat(Strategy):
-    """
-
+    """ Reinforcement Learning
     """
     def __init__(self, role, learn_rate, explore_rate=0.1, debug=False):
         self.role = role
@@ -88,6 +87,9 @@ class RLStrat(Strategy):
         self.q_table = QTable(self.value_of)
         self.prev_move = None
         self.prev_board_rep = None
+
+    def name(self):
+        return 'RL'
 
     def set_debug(self, debug):
         self.debug = debug
