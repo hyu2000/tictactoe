@@ -2,7 +2,6 @@
 test generator in recursion situation
 """
 from unittest import TestCase
-from collections import namedtuple
 
 
 def count_down(n):
@@ -23,19 +22,3 @@ class CountDownTest(TestCase):
                 print i, j
 
         print 'done'
-
-
-class Result(object):
-    X_WIN, O_WIN, DRAW = range(3)
-
-
-class NamedTupleTest(TestCase):
-    def test_class_vars_mutable(self):
-        self.assertEqual(Result.DRAW, 2)
-        Result.DRAW = 0
-        self.assertEqual(Result.X_WIN, Result.DRAW)
-
-
-class Result(namedtuple('Result', "YES NO")):
-    def __str__(self):
-        pass
