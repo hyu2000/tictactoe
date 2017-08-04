@@ -102,10 +102,10 @@ def run_RL_as_X():
     return strat1
 
 
-def run_manual_against(strat, role=CellState.PLAYER_X):
-    """ play a manual game vs a strategy (human as role)
+def run_manual_against(strat, human_as=CellState.PLAYER_X):
+    """ play a manual game vs a strategy (human in the specified role)
     """
-    if role == CellState.PLAYER_X:
+    if human_as == CellState.PLAYER_X:
         game = GamePlay(Human(), strat)
     else:
         game = GamePlay(strat, Human())
@@ -118,4 +118,6 @@ if __name__ == '__main__':
 
     random.seed(time.time())
     # rl_strat = run_RL_as_X()
-    run_manual_against(MinMaxStrat(), role=CellState.PLAYER_O)
+
+    # when minmax goes first, we can never win, but you'll learn how to achieve a draw!
+    run_manual_against(MinMaxStrat(), human_as=CellState.PLAYER_O)

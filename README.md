@@ -12,7 +12,14 @@ Code is refactored as we go, but hopefully you will find it reasonably structure
 
 To Play
 -------
-Run game_play.py. You can try run_manual() to play a game yourself.
+Run game_play.py. You can try run_manual() to play a game yourself, against any of the five strategies!
+
+Fun things to try:
+- train RL from scratch against some more intelligent strategies, see how fast it improves the winning rate
+- train RL against MinMax: could it achieve expert-level performance? how long?
+- RL could be better than MinMax as it can discover and exploit weakness in its opponent, while MinMax would
+ not even try as it assumes its opponent plays optimally. Demonstrate this!
+- The current RL agent learns a single role (either X or O). Is this easy to relax?
 
 Theory
 -------
