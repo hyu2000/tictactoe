@@ -3,16 +3,18 @@ import enum
 
 
 # all ints
-CellState = namedtuple('BoardState', ['EMPTY', 'PLAYER_X', 'PLAYER_O'])._make(range(3))
+class CellState(enum.IntEnum):
+    EMPTY = 0
+    PLAYER_X = 1
+    PLAYER_O = 2
 
-
-def reverse_role(role):
-    if role == CellState.PLAYER_O:
-        return CellState.PLAYER_X
-    elif role == CellState.PLAYER_X:
-        return CellState.PLAYER_O
-    else:
-        raise Exception('Invalid role: ' + role)
+    def reverse_role(self):
+        if self == CellState.PLAYER_O:
+            return CellState.PLAYER_X
+        elif self == CellState.PLAYER_X:
+            return CellState.PLAYER_O
+        else:
+            raise ValueError('Invalid role: ' + self)
 
 
 # also ints, so that it's easy to compare with CellState

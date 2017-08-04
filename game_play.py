@@ -99,19 +99,23 @@ def run_RL_as_X():
 
     train_RL(strat1, game)
     test_RL(strat1, game)
+    return strat1
 
 
-def run_manual():
-    """ play a manual game vs a strategy of your choice
+def run_manual_against(strat, role=CellState.PLAYER_X):
+    """ play a manual game vs a strategy (human as role)
     """
-    from strategies import Human, RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1
-    strat1 = Human()
-    strat2 = MinMaxStrat()  # pick your favorite player!
-    game = GamePlay(strat1, strat2)
+    if role == CellState.PLAYER_X:
+        game = GamePlay(Human(), strat)
+    else:
+        game = GamePlay(strat, Human())
+
     game.run()
     # game.run_tournament(5000)
 
 if __name__ == '__main__':
+    from strategies import Human, RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1
+
     random.seed(time.time())
-    run_RL_as_X()
-    # run_manual()
+    # rl_strat = run_RL_as_X()
+    run_manual_against(MinMaxStrat(), role=CellState.PLAYER_O)

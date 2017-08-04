@@ -49,10 +49,16 @@ class EnumTest(TestCase):
         self.assertEqual(IntEnumResult.YES.name, 'YES')
         self.assertEqual(IntEnumResult.YES.value, 0)
 
+        # easily compare with int
         self.assertIsInstance(IntEnumResult.YES, int)
         self.assertEqual(IntEnumResult.YES, 0)
 
         self.assertEqual(IntResult.YES, IntEnumResult.YES)
+
+        # access from int
+        self.assertEqual(IntEnumResult(1), 1)
+        with self.assertRaises(ValueError):
+            IntEnumResult(3)
 
     def test_enum(self):
         self.assertEqual(EnumResult.YES.name, 'YES')

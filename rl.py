@@ -1,7 +1,6 @@
 import random
 import pickle
 from strategies import Strategy
-import utils
 from utils import CellState, GameResult, Board
 
 
@@ -108,7 +107,7 @@ class RLStrat(Strategy):
         verdict = board.evaluate()
         if verdict == self.role:
             return 1.0
-        elif verdict == utils.reverse_role(self.role):
+        elif verdict == self.role.reverse_role():
             return 0
         elif verdict == GameResult.DRAW:
             return 0

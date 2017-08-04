@@ -1,4 +1,4 @@
-from utils import CellState, GameResult, reverse_role
+from utils import CellState, GameResult
 import random
 
 
@@ -69,7 +69,7 @@ class MinMaxStrat(Strategy):
         return best_move
 
     def eval_board(self, board, role):
-        next_role = reverse_role(role)
+        next_role = CellState(role).reverse_role()
         best_possible_result = None
         best_move = None
         for (row, col) in board.next_empty_square():
@@ -175,7 +175,7 @@ class DefensiveStrat1(Strategy):
         return 'DefensiveStrat'
 
     def next_move(self, board, role):
-        opponent = reverse_role(role)
+        opponent = CellState(role).reverse_role()
 
         # defend each row
         for irow, row in enumerate(board):
