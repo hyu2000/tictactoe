@@ -1,5 +1,5 @@
-import constants as TTT
-from constants import GameResult, num_empty_squares, next_empty_square, kth_empty_square
+import utils
+from utils import CellState, GameResult, num_empty_squares, next_empty_square, kth_empty_square
 import random
 
 
@@ -13,7 +13,7 @@ class Strategy(object):
         :param role: role == ttt.PLAYER_X or O
         :return: row, col
         """
-        raise Exception('Not implemented')
+        raise NotImplementedError
 
 
 class Human(Strategy):
@@ -76,7 +76,7 @@ def count_stones_in_line(row, role):
         if x == role:
             num_my_stones += 1
             num_total_stones += 1
-        elif x != TTT.EMPTY:
+        elif x != CellState.EMPTY:
             num_total_stones += 1
         else:
             idx_empty_spot = i
@@ -89,7 +89,7 @@ def empty_spot_in_row(row):
     :return: position of the 1st empty spot in the list
     """
     for i, val in enumerate(row):
-        if val == TTT.EMPTY:
+        if val == CellState.EMPTY:
             return i
     raise 'No empty spot in row! %s' % row
 
@@ -135,13 +135,13 @@ class MinMaxStrat(Strategy):
         return best_move
 
     def eval_board(self, board, role):
-        next_role = TTT.reverse_role(role)
+        next_role = utils.reverse_role(role)
         best_possible_result = None
         best_move = None
         for (row, col) in next_empty_square(board):
             try:
                 board[row][col] = role
-                result = TTT.gameover(board)
+                result = utils.gameover(board)
                 if result == GameResult.UNFINISHED:
                     result, _ = self.eval_board(board, next_role)
                 if result == role:
@@ -155,7 +155,7 @@ class MinMaxStrat(Strategy):
                     best_possible_result = result
                     best_move = (row, col)
             finally:
-                board[row][col] = TTT.EMPTY
+                board[row][col] = CellState.EMPTY
 
         return best_possible_result, best_move
 
@@ -172,7 +172,7 @@ class DefensiveStrat1(Strategy):
         return 'DefensiveStrat'
 
     def next_move(self, board, role):
-        opponent = TTT.reverse_role(role)
+        opponent = utils.reverse_role(role)
 
         # defend each row
         for irow, row in enumerate(board):

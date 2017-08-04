@@ -1,33 +1,33 @@
 from unittest import TestCase
 
-import constants as TTT
+import utils
 
 
 class BasicTest(TestCase):
     def setUp(self):
-        self.empty_board = TTT.emptystate()
+        self.empty_board = utils.emptystate()
 
     def testPrintBoard(self):
-        TTT.print_board(self.empty_board)
+        utils.print_board(self.empty_board)
 
     def testGameOver(self):
         board = self.empty_board
-        verdict = TTT.gameover(board)
+        verdict = utils.gameover(board)
         print 'empty board: ', verdict
-        self.assertEqual(verdict, TTT.EMPTY)
+        self.assertEqual(verdict, utils.EMPTY)
 
         for i in range(3):
-            board[1][i] = TTT.PLAYER_O
-        verdict = TTT.gameover(board)
+            board[1][i] = utils.PLAYER_O
+        verdict = utils.gameover(board)
         print 'second row all O:', verdict
-        self.assertEqual(verdict, TTT.PLAYER_O)
+        self.assertEqual(verdict, utils.PLAYER_O)
 
     def testDiagonal(self):
         board = self.empty_board
-        board[0][2] = TTT.PLAYER_X
-        board[1][1] = TTT.PLAYER_X
-        self.assertEqual(TTT.gameover(board), TTT.EMPTY)
+        board[0][2] = utils.PLAYER_X
+        board[1][1] = utils.PLAYER_X
+        self.assertEqual(utils.gameover(board), utils.EMPTY)
 
-        board[2][0] = TTT.PLAYER_X
-        verdict = TTT.gameover(board)
-        self.assertEqual(verdict, TTT.PLAYER_X)
+        board[2][0] = utils.PLAYER_X
+        verdict = utils.gameover(board)
+        self.assertEqual(verdict, utils.PLAYER_X)

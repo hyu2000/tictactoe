@@ -1,7 +1,8 @@
+from collections import namedtuple
 
 # board representation: list of rows, each row a list of 3 ints.
 
-# Stone value:
+CellState = namedtuple('BoardState', 'EMPTY PLAYER_X PLAYER_O')._make(range(3))
 EMPTY = 0
 PLAYER_X = 1
 PLAYER_O = 2
@@ -113,7 +114,6 @@ class GameResult(object):
             return 'Tie game, shake hands'
         else:
             return 'Not finished, keep playing'
-
 
 def gameover(board):
     """evaluate board -> winning player, DRAW, or EMPTY

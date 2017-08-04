@@ -1,13 +1,12 @@
 from unittest import TestCase
-import constants as TTT
-from constants import GameResult
+from utils import CellState, GameResult
 from strategies import difloc, RobertStrat1, MinMaxStrat
 
 
 class SimpleTest(TestCase):
 
     def setUp(self):
-        EMPTY = TTT.EMPTY
+        EMPTY = CellState.EMPTY
         self.board = [
             [1, 1, EMPTY],
             [EMPTY, EMPTY, EMPTY],

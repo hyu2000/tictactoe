@@ -3,8 +3,9 @@ import random
 import time
 import os
 
-import constants as TTT
-from constants import GameResult, kth_empty_square
+import utils
+from utils import CellState
+from utils import GameResult, kth_empty_square
 
 
 PARAM_FILE = '/tmp/rl.pickle'
@@ -18,26 +19,26 @@ class GamePlay(object):
         return '%s vs %s' % (self.players[0].name(), self.players[1].name())
 
     def run(self, verbose=True):
-        board = TTT.emptystate()
+        board = utils.emptystate()
         if verbose:
-            TTT.print_board(board)
+            utils.print_board(board)
         for i in range(8):
             iplayer = i % 2
             stone = iplayer + 1
-            assert stone == TTT.PLAYER_O or stone == TTT.PLAYER_X
+            assert stone == CellState.PLAYER_O or stone == CellState.PLAYER_X
 
             row, col = self.players[iplayer].next_move(board, stone)
 
-            if board[row][col] != TTT.EMPTY:
+            if board[row][col] != CellState.EMPTY:
                 print 'player %d made an invalid move: (%d, %d)' % (stone, row, col)
                 raise Exception('Debug now!')
             board[row][col] = stone
 
             if verbose:
                 print '%dth move, player %d picked row %d, col %d' % (i, stone, row, col)
-                TTT.print_board_with_last_move(board, row, col)
+                utils.print_board_with_last_move(board, row, col)
 
-            verdict = TTT.gameover(board)
+            verdict = utils.gameover(board)
             if verdict == GameResult.UNFINISHED:
                 continue
 
@@ -47,10 +48,10 @@ class GamePlay(object):
 
         # last move is trivial if it gets here
         row, col = kth_empty_square(board, 0)
-        board[row][col] = TTT.PLAYER_X
-        verdict = TTT.gameover(board)
+        board[row][col] = CellState.PLAYER_X
+        verdict = utils.gameover(board)
         if verbose:
-            TTT.print_board_with_last_move(board, row, col)
+            utils.print_board_with_last_move(board, row, col)
             print GameResult.announce(verdict)
         return verdict
 
@@ -92,7 +93,7 @@ def run_RL_as_X():
     """
     from strategies import RobertStrat1, MinMaxStrat, DefensiveStrat1
     from rl import RLStrat
-    strat1 = RLStrat(TTT.PLAYER_X, 0.1)
+    strat1 = RLStrat(CellState.PLAYER_X, 0.1)
     strat2 = RobertStrat1()  # pick your favorite player
     game = GamePlay(strat1, strat2)
     if os.path.exists(PARAM_FILE):
