@@ -44,6 +44,7 @@ class QTable(object):
         self.total_num_updates = 0
 
     def representation(self, board):
+        board = board.board
         return tuple(board[0]), tuple(board[1]), tuple(board[2])
 
     def look_up(self, board):
@@ -100,10 +101,11 @@ class RLStrat(Strategy):
     def set_learn_rate(self, rate):
         self.learn_rate = rate
 
-    def value_of(self, board):
+    def value_of(self, board_rep):
         """ value function
         """
-        verdict = board.gameover()
+        board = Board(init_state=board_rep)
+        verdict = board.evaluate()
         if verdict == self.role:
             return 1.0
         elif verdict == utils.reverse_role(self.role):
@@ -117,9 +119,12 @@ class RLStrat(Strategy):
         assert role == self.role
 
         row, col = self._next_move(board)
-        board[row][col] = role
+
+        # record the transition
+        # Note we cannot change board state at this moment, wait for game controller to check our move and do it
+        board.board[row][col] = role
         self.prev_board_rep = self.q_table.representation(board)
-        board[row][col] = CellState.EMPTY
+        board.board[row][col] = CellState.EMPTY
         self.prev_move = row, col
         return row, col
 
@@ -145,7 +150,7 @@ class RLStrat(Strategy):
             if q > q_best:
                 q_best = q
                 best_move = row, col
-            board[row][col] = CellState.EMPTY
+            board.board[row][col] = CellState.EMPTY
         if self.debug:
             Board.print_score_board_with_highlight(score_board, best_move[0], best_move[1])
         return q_best, best_move

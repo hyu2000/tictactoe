@@ -41,9 +41,6 @@ class Board(object):
       list of rows, each row a list of 3 ints.
     """
 
-    def __init__(self):
-        self.board = [[EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY]]
-
     BOARD_FORMAT_WITH_INDEX = '\n'.join([
         '----------------------------',
         '| {0} 0| {1} 1| {2} 2|',
@@ -61,6 +58,12 @@ class Board(object):
         '|--------------------------|',
         '| {6} | {7} | {8} |',
         '----------------------------'])
+
+    def __init__(self, init_state=None):
+        if not init_state:
+            self.board = [[EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY]]
+        else:
+            self.board = init_state
 
     def print_board_with_last_move(self, row, col):
         NAMES = [' ', 'X', 'O']
@@ -113,7 +116,7 @@ class Board(object):
                 return row, col
         raise Exception('Invalid k=%d' % k)
 
-    def gameover(self):
+    def evaluate(self):
         """evaluate board -> winning player, DRAW, or EMPTY
         :return:
         """

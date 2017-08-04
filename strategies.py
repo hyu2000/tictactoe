@@ -140,7 +140,7 @@ class MinMaxStrat(Strategy):
         for (row, col) in board.next_empty_square():
             try:
                 board.board[row][col] = role
-                result = board.gameover()
+                result = board.evaluate()
                 if result == GameResult.UNFINISHED:
                     result, _ = self.eval_board(board, next_role)
                 if result == role:

@@ -37,7 +37,7 @@ class GamePlay(object):
                 print '%dth move, player %d picked row %d, col %d' % (i, stone, row, col)
                 board.print_board_with_last_move(row, col)
 
-            verdict = board.gameover()
+            verdict = board.evaluate()
             if verdict == GameResult.UNFINISHED:
                 continue
 
@@ -47,8 +47,8 @@ class GamePlay(object):
 
         # last move is trivial if it gets here
         row, col = board.kth_empty_square(0)
-        board[row][col] = CellState.PLAYER_X
-        verdict = board.gameover()
+        board.board[row][col] = CellState.PLAYER_X
+        verdict = board.evaluate()
         if verbose:
             board.print_board_with_last_move(row, col)
             print GameResult.announce(verdict)
