@@ -1,4 +1,4 @@
-from utils import CellState, GameResult, reverse_role, announce_result
+from utils import CellState, GameResult, reverse_role
 import random
 
 
@@ -65,7 +65,7 @@ class MinMaxStrat(Strategy):
     def next_move(self, board, role):
         best_result, best_move = self.eval_board(board, role)
         if self.verbose:
-            print 'MinMax predicts', announce_result(best_result)
+            print 'MinMax predicts', best_result.announce()
         return best_move
 
     def eval_board(self, board, role):

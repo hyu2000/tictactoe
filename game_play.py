@@ -3,7 +3,7 @@ import random
 import time
 import os
 
-from utils import CellState, GameResult, Board, announce_result
+from utils import CellState, GameResult, Board
 
 
 PARAM_FILE = '/tmp/rl.pickle'
@@ -41,7 +41,7 @@ class GamePlay(object):
                 continue
 
             if verbose:
-                print announce_result(verdict)
+                print verdict.announce()
             return verdict
 
         # last move is trivial if it gets here
@@ -50,7 +50,7 @@ class GamePlay(object):
         verdict = board.evaluate()
         if verbose:
             board.print_board_with_last_move(row, col)
-            print announce_result(verdict)
+            print verdict.announce()
         return verdict
 
     def run_tournament(self, N=100):
