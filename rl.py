@@ -2,7 +2,7 @@ import random
 import pickle
 from strategies import Strategy
 import utils
-from utils import CellState, GameResult, next_empty_square, num_empty_squares
+from utils import CellState, GameResult, Board
 
 
 class QTable0(object):
@@ -103,7 +103,7 @@ class RLStrat(Strategy):
     def value_of(self, board):
         """ value function
         """
-        verdict = utils.gameover(board)
+        verdict = board.gameover()
         if verdict == self.role:
             return 1.0
         elif verdict == utils.reverse_role(self.role):
@@ -137,9 +137,9 @@ class RLStrat(Strategy):
     def exploit(self, board):
         q_best = -2
         best_move = None
-        score_board = utils.empty_score_board()
-        for row, col in next_empty_square(board):
-            board[row][col] = self.role
+        score_board = board.empty_score_board()
+        for row, col in board.next_empty_square():
+            board.board[row][col] = self.role
             q, update_count = self.q_table.look_up(board)
             score_board[row][col] = '%.3f %3.1g' % (10 * q, update_count)
             if q > q_best:
@@ -147,13 +147,13 @@ class RLStrat(Strategy):
                 best_move = row, col
             board[row][col] = CellState.EMPTY
         if self.debug:
-            utils.print_score_board_with_highlight(score_board, best_move[0], best_move[1])
+            Board.print_score_board_with_highlight(score_board, best_move[0], best_move[1])
         return q_best, best_move
 
     def explore(self, board):
-        num_choices = num_empty_squares(board)
+        num_choices = board.num_empty_squares()
         k = int(random.random() * num_choices)
-        for i, (row, col) in enumerate(next_empty_square(board)):
+        for i, (row, col) in enumerate(board.next_empty_square()):
             if i == k:
                 return row, col
         raise Exception('Should not reach here')

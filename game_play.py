@@ -3,9 +3,8 @@ import random
 import time
 import os
 
-import utils
 from utils import CellState
-from utils import GameResult, kth_empty_square
+from utils import GameResult, Board
 
 
 PARAM_FILE = '/tmp/rl.pickle'
@@ -19,9 +18,9 @@ class GamePlay(object):
         return '%s vs %s' % (self.players[0].name(), self.players[1].name())
 
     def run(self, verbose=True):
-        board = utils.emptystate()
+        board = Board()
         if verbose:
-            utils.print_board(board)
+            board.print_board()
         for i in range(8):
             iplayer = i % 2
             stone = iplayer + 1
@@ -29,16 +28,16 @@ class GamePlay(object):
 
             row, col = self.players[iplayer].next_move(board, stone)
 
-            if board[row][col] != CellState.EMPTY:
+            if board.board[row][col] != CellState.EMPTY:
                 print 'player %d made an invalid move: (%d, %d)' % (stone, row, col)
                 raise Exception('Debug now!')
-            board[row][col] = stone
+            board.board[row][col] = stone
 
             if verbose:
                 print '%dth move, player %d picked row %d, col %d' % (i, stone, row, col)
-                utils.print_board_with_last_move(board, row, col)
+                board.print_board_with_last_move(row, col)
 
-            verdict = utils.gameover(board)
+            verdict = board.gameover()
             if verdict == GameResult.UNFINISHED:
                 continue
 
@@ -47,11 +46,11 @@ class GamePlay(object):
             return verdict
 
         # last move is trivial if it gets here
-        row, col = kth_empty_square(board, 0)
+        row, col = board.kth_empty_square(0)
         board[row][col] = CellState.PLAYER_X
-        verdict = utils.gameover(board)
+        verdict = board.gameover()
         if verbose:
-            utils.print_board_with_last_move(board, row, col)
+            board.print_board_with_last_move(row, col)
             print GameResult.announce(verdict)
         return verdict
 

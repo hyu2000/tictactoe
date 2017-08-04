@@ -1,5 +1,4 @@
-import utils
-from utils import CellState, GameResult, num_empty_squares, next_empty_square, kth_empty_square
+from utils import CellState, GameResult, reverse_role
 import random
 
 
@@ -48,9 +47,9 @@ class RandomPlay(Strategy):
         return 'random'
 
     def next_move(self, board, role):
-        num_empty_spots = num_empty_squares(board)
-        pick = random.randint(0, num_empty_spots - 1)
-        return kth_empty_square(board, pick)
+        num_empty_spots = board.num_empty_squares()
+        k = random.randint(0, num_empty_spots - 1)
+        return board.kth_empty_square(k)
 
 
 def difloc(a, b):
@@ -104,7 +103,7 @@ class RobertStrat1(Strategy):
 
     def next_move(self, board, role):
         for irow in range(3):
-            row = board[irow]
+            row = board.board[irow]
             num_my_stones, total_stones, idx_empty_spot = count_stones_in_line(row, role)
             if total_stones == 2 and num_my_stones == 2:
                 if self.debug:
@@ -135,13 +134,13 @@ class MinMaxStrat(Strategy):
         return best_move
 
     def eval_board(self, board, role):
-        next_role = utils.reverse_role(role)
+        next_role = reverse_role(role)
         best_possible_result = None
         best_move = None
-        for (row, col) in next_empty_square(board):
+        for (row, col) in board.next_empty_square():
             try:
-                board[row][col] = role
-                result = utils.gameover(board)
+                board.board[row][col] = role
+                result = board.gameover()
                 if result == GameResult.UNFINISHED:
                     result, _ = self.eval_board(board, next_role)
                 if result == role:
@@ -155,7 +154,7 @@ class MinMaxStrat(Strategy):
                     best_possible_result = result
                     best_move = (row, col)
             finally:
-                board[row][col] = CellState.EMPTY
+                board.board[row][col] = CellState.EMPTY
 
         return best_possible_result, best_move
 
@@ -172,7 +171,7 @@ class DefensiveStrat1(Strategy):
         return 'DefensiveStrat'
 
     def next_move(self, board, role):
-        opponent = utils.reverse_role(role)
+        opponent = reverse_role(role)
 
         # defend each row
         for irow, row in enumerate(board):
