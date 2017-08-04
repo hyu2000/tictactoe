@@ -1,4 +1,4 @@
-from utils import CellState, GameResult, reverse_role
+from utils import CellState, GameResult, reverse_role, announce_result
 import random
 
 
@@ -50,6 +50,52 @@ class RandomPlay(Strategy):
         num_empty_spots = board.num_empty_squares()
         k = random.randint(0, num_empty_spots - 1)
         return board.kth_empty_square(k)
+
+
+class MinMaxStrat(Strategy):
+    """ the deep search strategy, assuming opponent plays optimally
+    """
+
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
+    def name(self):
+        return 'MinMax'
+
+    def next_move(self, board, role):
+        best_result, best_move = self.eval_board(board, role)
+        if self.verbose:
+            print 'MinMax predicts', announce_result(best_result)
+        return best_move
+
+    def eval_board(self, board, role):
+        next_role = reverse_role(role)
+        best_possible_result = None
+        best_move = None
+        for (row, col) in board.next_empty_square():
+            try:
+                board.board[row][col] = role
+                result = board.evaluate()
+                if result == GameResult.UNFINISHED:
+                    result, _ = self.eval_board(board, next_role)
+                if result == role:
+                    return result, (row, col)
+                elif result == GameResult.DRAW:
+                    # this will pick the last draw move, if several leads to draw
+                    best_possible_result = result
+                    best_move = (row, col)
+                elif best_move is None:
+                    # so that we can return a valid move if cannot draw
+                    best_possible_result = result
+                    best_move = (row, col)
+            finally:
+                board.board[row][col] = CellState.EMPTY
+
+        return best_possible_result, best_move
+
+
+# ------------------------------------------------------------------------------------------
+# below are some hand-crafted strategy
 
 
 def difloc(a, b):
@@ -115,48 +161,6 @@ class RobertStrat1(Strategy):
             #     num_my_stones, total_stones = count_stones_in_line(col, role)
 
         return self.baseline.next_move(board, role)
-
-
-class MinMaxStrat(Strategy):
-    """ the deep search strategy, assuming opponent plays optimally
-    """
-
-    def __init__(self, verbose=False):
-        self.verbose = verbose
-
-    def name(self):
-        return 'MinMax'
-
-    def next_move(self, board, role):
-        best_result, best_move = self.eval_board(board, role)
-        if self.verbose:
-            print 'MinMax predicts', GameResult.announce(best_result)
-        return best_move
-
-    def eval_board(self, board, role):
-        next_role = reverse_role(role)
-        best_possible_result = None
-        best_move = None
-        for (row, col) in board.next_empty_square():
-            try:
-                board.board[row][col] = role
-                result = board.evaluate()
-                if result == GameResult.UNFINISHED:
-                    result, _ = self.eval_board(board, next_role)
-                if result == role:
-                    return result, (row, col)
-                elif result == GameResult.DRAW:
-                    # this will pick the last draw move, if several leads to draw
-                    best_possible_result = result
-                    best_move = (row, col)
-                elif best_move is None:
-                    # so that we can return a valid move if cannot draw
-                    best_possible_result = result
-                    best_move = (row, col)
-            finally:
-                board.board[row][col] = CellState.EMPTY
-
-        return best_possible_result, best_move
 
 
 class DefensiveStrat1(Strategy):

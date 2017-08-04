@@ -1,43 +1,66 @@
 from collections import namedtuple
+import enum
 
-CellState = namedtuple('BoardState', 'EMPTY PLAYER_X PLAYER_O')._make(range(3))
-EMPTY = 0
-PLAYER_X = 1
-PLAYER_O = 2
+
+# all ints
+CellState = namedtuple('BoardState', ['EMPTY', 'PLAYER_X', 'PLAYER_O'])._make(range(3))
 
 
 def reverse_role(role):
-    if role == PLAYER_O:
-        return PLAYER_X
-    elif role == PLAYER_X:
-        return PLAYER_O
+    if role == CellState.PLAYER_O:
+        return CellState.PLAYER_X
+    elif role == CellState.PLAYER_X:
+        return CellState.PLAYER_O
     else:
-        raise Exception('invalid role')
+        raise Exception('Invalid role: ' + role)
 
 
-class GameResult(object):
-    """ constants of game result
-    """
-    UNFINISHED = 0
-    X_WINS = PLAYER_X
-    O_WINS = PLAYER_O
-    DRAW = 3
+# also ints, so that it's easy to compare with CellState
+GameResult = namedtuple('GameResult', 'UNFINISHED X_WINS O_WINS DRAW')._make(range(4))
 
-    @classmethod
-    def announce(cls, result):
-        if result == cls.X_WINS:
-            return 'X wins! Game over.'
-        elif result == cls.O_WINS:
-            return 'O wins! Game over.'
-        elif result == cls.DRAW:
-            return 'Tie game, shake hands'
-        else:
-            return 'Not finished, keep playing'
+
+def announce_result(result):
+    if result == GameResult.X_WINS:
+        return 'X wins! Game over.'
+    elif result == GameResult.O_WINS:
+        return 'O wins! Game over.'
+    elif result == GameResult.DRAW:
+        return 'Tie game, shake hands'
+    else:
+        return 'Not finished, keep playing'
+
+
+# class GameResult(enum.Enum):
+#     """ constants of game result
+#     """
+#     UNFINISHED = 0
+#     X_WINS = CellState.PLAYER_X
+#     O_WINS = CellState.PLAYER_O
+#     DRAW = 3
+#
+#     @staticmethod
+#     def from_role(role):
+#         if role == CellState.PLAYER_O:
+#             return GameResult.O_WINS
+#         elif role == CellState.PLAYER_X:
+#             return GameResult.X_WINS
+#         else:
+#             raise Exception('Invalid role: ' + role)
+#
+#     def announce(self):
+#         if self == self.X_WINS:
+#             return 'X wins! Game over.'
+#         elif self == self.O_WINS:
+#             return 'O wins! Game over.'
+#         elif self == self.DRAW:
+#             return 'Tie game, shake hands'
+#         else:
+#             return 'Not finished, keep playing'
 
 
 class Board(object):
     """
-    A bunch helper functions around the actual board representation, which is a
+    Wrap a bunch helper functions around the actual board representation, which is a
       list of rows, each row a list of 3 ints.
     """
 
@@ -60,6 +83,7 @@ class Board(object):
         '----------------------------'])
 
     def __init__(self, init_state=None):
+        EMPTY = CellState.EMPTY
         if not init_state:
             self.board = [[EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY]]
         else:
@@ -98,7 +122,7 @@ class Board(object):
         self.print_board_with_last_move(-1, -1)
 
     def num_empty_squares(self):
-        num = sum([val == EMPTY for row in self.board for val in row])
+        num = sum([val == CellState.EMPTY for row in self.board for val in row])
         return num
 
     def next_empty_square(self):
@@ -107,7 +131,7 @@ class Board(object):
         """
         for irow, row in enumerate(self.board):
             for icol, stone in enumerate(row):
-                if stone == EMPTY:
+                if stone == CellState.EMPTY:
                     yield irow, icol
 
     def kth_empty_square(self, k):
@@ -122,16 +146,16 @@ class Board(object):
         """
         board = self.board
         for i in range(3):
-            if board[i][0] != EMPTY and board[i][0] == board[i][1] and board[i][0] == board[i][2]:
+            if board[i][0] != CellState.EMPTY and board[i][0] == board[i][1] and board[i][0] == board[i][2]:
                 return board[i][0]
-            if board[0][i] != EMPTY and board[0][i] == board[1][i] and board[0][i] == board[2][i]:
+            if board[0][i] != CellState.EMPTY and board[0][i] == board[1][i] and board[0][i] == board[2][i]:
                 return board[0][i]
-        if board[0][0] != EMPTY and board[0][0] == board[1][1] and board[0][0] == board[2][2]:
+        if board[0][0] != CellState.EMPTY and board[0][0] == board[1][1] and board[0][0] == board[2][2]:
             return board[0][0]
-        if board[0][2] != EMPTY and board[0][2] == board[1][1] and board[0][2] == board[2][0]:
+        if board[0][2] != CellState.EMPTY and board[0][2] == board[1][1] and board[0][2] == board[2][0]:
             return board[0][2]
         for i in range(3):
             for j in range(3):
-                if board[i][j] == EMPTY:
+                if board[i][j] == CellState.EMPTY:
                     return GameResult.UNFINISHED
         return GameResult.DRAW
