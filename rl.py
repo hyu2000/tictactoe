@@ -1,6 +1,6 @@
 import random
 import pickle
-from game_play import Strategy, gameover
+from strategies import Strategy
 import constants as TTT
 from constants import GameResult, next_empty_square, num_empty_squares
 
@@ -103,7 +103,7 @@ class RLStrat(Strategy):
     def value_of(self, board):
         """ value function
         """
-        verdict = gameover(board)
+        verdict = TTT.gameover(board)
         if verdict == self.role:
             return 1.0
         elif verdict == TTT.reverse_role(self.role):

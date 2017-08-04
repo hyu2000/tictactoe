@@ -113,3 +113,23 @@ class GameResult(object):
             return 'Tie game, shake hands'
         else:
             return 'Not finished, keep playing'
+
+
+def gameover(board):
+    """evaluate board -> winning player, DRAW, or EMPTY
+    :return:
+    """
+    for i in range(3):
+        if board[i][0] != EMPTY and board[i][0] == board[i][1] and board[i][0] == board[i][2]:
+            return board[i][0]
+        if board[0][i] != EMPTY and board[0][i] == board[1][i] and board[0][i] == board[2][i]:
+            return board[0][i]
+    if board[0][0] != EMPTY and board[0][0] == board[1][1] and board[0][0] == board[2][2]:
+        return board[0][0]
+    if board[0][2] != EMPTY and board[0][2] == board[1][1] and board[0][2] == board[2][0]:
+        return board[0][2]
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == EMPTY:
+                return GameResult.UNFINISHED
+    return GameResult.DRAW

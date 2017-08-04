@@ -1,7 +1,41 @@
 import constants as TTT
 from constants import GameResult, num_empty_squares, next_empty_square, kth_empty_square
 import random
-from game_play import Strategy, gameover
+
+
+class Strategy(object):
+    def name(self):
+        return 'abstract strategy'
+
+    def next_move(self, board, role):
+        """
+        :param board:
+        :param role: role == ttt.PLAYER_X or O
+        :return: row, col
+        """
+        raise Exception('Not implemented')
+
+
+class Human(Strategy):
+    def __init__(self, name='human'):
+        self.name = name
+
+    def name(self):
+        return self.name
+
+    def next_move(self, board, role):
+        while True:
+            action = raw_input('Your move (row,col) or index (row-major)? ')
+            elements = action.split(',')
+            if len(elements) == 2:
+                row, col = int(elements[0]), int(elements[1])
+            elif len(elements) == 1:
+                index = int(elements[0])
+                row, col = index / 3, index % 3
+            else:
+                print 'invalid input, try again...'
+                continue
+            return row, col
 
 
 class RandomPlay(Strategy):
@@ -107,7 +141,7 @@ class MinMaxStrat(Strategy):
         for (row, col) in next_empty_square(board):
             try:
                 board[row][col] = role
-                result = gameover(board)
+                result = TTT.gameover(board)
                 if result == GameResult.UNFINISHED:
                     result, _ = self.eval_board(board, next_role)
                 if result == role:

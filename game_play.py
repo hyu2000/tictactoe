@@ -10,61 +10,6 @@ from constants import GameResult, kth_empty_square
 PARAM_FILE = '/tmp/rl.pickle'
 
 
-class Strategy(object):
-    def name(self):
-        return 'abstract strategy'
-
-    def next_move(self, board, role):
-        """
-        :param board:
-        :param role: role == ttt.PLAYER_X or O
-        :return: row, col
-        """
-        raise Exception('Not implemented')
-
-
-class Human(Strategy):
-    def __init__(self, name='human'):
-        self.name = name
-
-    def name(self):
-        return self.name
-
-    def next_move(self, board, role):
-        while True:
-            action = raw_input('Your move (row,col) or index (row-major)? ')
-            elements = action.split(',')
-            if len(elements) == 2:
-                row, col = int(elements[0]), int(elements[1])
-            elif len(elements) == 1:
-                index = int(elements[0])
-                row, col = index / 3, index % 3
-            else:
-                print 'invalid input, try again...'
-                continue
-            return row, col
-
-
-def gameover(board):
-    """evaluate board -> winning player, DRAW, or EMPTY
-    :return:
-    """
-    for i in range(3):
-        if board[i][0] != TTT.EMPTY and board[i][0] == board[i][1] and board[i][0] == board[i][2]:
-            return board[i][0]
-        if board[0][i] != TTT.EMPTY and board[0][i] == board[1][i] and board[0][i] == board[2][i]:
-            return board[0][i]
-    if board[0][0] != TTT.EMPTY and board[0][0] == board[1][1] and board[0][0] == board[2][2]:
-        return board[0][0]
-    if board[0][2] != TTT.EMPTY and board[0][2] == board[1][1] and board[0][2] == board[2][0]:
-        return board[0][2]
-    for i in range(3):
-        for j in range(3):
-            if board[i][j] == TTT.EMPTY:
-                return GameResult.UNFINISHED
-    return GameResult.DRAW
-
-
 class GamePlay(object):
     def __init__(self, strategy_x, strategy_o):
         self.players = [strategy_x, strategy_o]
@@ -92,7 +37,7 @@ class GamePlay(object):
                 print '%dth move, player %d picked row %d, col %d' % (i, stone, row, col)
                 TTT.print_board_with_last_move(board, row, col)
 
-            verdict = gameover(board)
+            verdict = TTT.gameover(board)
             if verdict == GameResult.UNFINISHED:
                 continue
 
@@ -103,7 +48,7 @@ class GamePlay(object):
         # last move is trivial if it gets here
         row, col = kth_empty_square(board, 0)
         board[row][col] = TTT.PLAYER_X
-        verdict = gameover(board)
+        verdict = TTT.gameover(board)
         if verbose:
             TTT.print_board_with_last_move(board, row, col)
             print GameResult.announce(verdict)
@@ -160,7 +105,7 @@ def run_RL_as_X():
 def run_manual():
     """ play a manual game vs a strategy of your choice
     """
-    from strategies import RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1
+    from strategies import Human, RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1
     strat1 = Human()
     strat2 = MinMaxStrat()  # pick your favorite player!
     game = GamePlay(strat1, strat2)
