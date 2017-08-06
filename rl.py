@@ -117,7 +117,7 @@ class RLStrat(Strategy):
     def next_move(self, board, role):
         assert role == self.role
 
-        row, col = self._next_move(board)
+        row, col = self._choose_next_move(board)
 
         # record the transition
         # Note we cannot change board state at this moment, wait for game controller to check our move and do it
@@ -127,7 +127,7 @@ class RLStrat(Strategy):
         self.prev_move = row, col
         return row, col
 
-    def _next_move(self, board):
+    def _choose_next_move(self, board):
         if random.random() < self.explore_rate:
             # print '>>>>>> explore'
             # TODO we could do an update with some computation

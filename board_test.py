@@ -29,3 +29,8 @@ class BasicTest(TestCase):
         self.board.board[2][0] = CellState.PLAYER_X
         verdict = self.board.evaluate()
         self.assertEqual(verdict, GameResult.X_WINS)
+
+    def test_cmp_safety(self):
+        self.assertEqual(GameResult.X_WINS, CellState.PLAYER_X)
+        self.assertEqual(GameResult.O_WINS, CellState.PLAYER_O)
+        self.assertNotEqual(GameResult.X_WINS, CellState.PLAYER_O)

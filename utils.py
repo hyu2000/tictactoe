@@ -64,8 +64,8 @@ class Board(object):
         '----------------------------'])
 
     def __init__(self, init_state=None):
-        EMPTY = CellState.EMPTY
         if not init_state:
+            EMPTY = CellState.EMPTY
             self.board = [[EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY]]
         else:
             self.board = init_state

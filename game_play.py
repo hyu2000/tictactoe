@@ -60,6 +60,7 @@ class GamePlay(object):
             counter[result] += 1
         percentage = [float(counter[result]) / N for result in (GameResult.X_WINS, GameResult.O_WINS, GameResult.DRAW)]
         print '%d runs: (X win, X lose, tie) = %s' % (N, percentage)
+        return percentage
 
 
 def train_RL(strat1, game):
@@ -114,10 +115,10 @@ def run_manual_against(strat, human_as=CellState.PLAYER_X):
     # game.run_tournament(5000)
 
 if __name__ == '__main__':
-    from strategies import Human, RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1
+    from strategies import Human, RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1, AntiMinMaxStrat
 
     random.seed(time.time())
     # rl_strat = run_RL_as_X()
 
     # when minmax goes first, we can never win, but you'll learn how to achieve a draw!
-    run_manual_against(MinMaxStrat(), human_as=CellState.PLAYER_O)
+    run_manual_against(AntiMinMaxStrat())

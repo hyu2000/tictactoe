@@ -94,6 +94,26 @@ class MinMaxStrat(Strategy):
         return best_possible_result, best_move
 
 
+class AntiMinMaxStrat(Strategy):
+    """ memorized plays against MinMaxStrat (above), otherwise quite dumb
+    """
+    def __init__(self):
+        self.baseline = DefensiveStrat1(level=10)
+
+    def name(self):
+        return 'AntiMinMax'
+
+    def next_move(self, board, role):
+        if role == CellState.PLAYER_X:
+            # only acts as O for now
+            raise NotImplementedError
+
+        if board.num_empty_squares() == 8 and board.board[1][1] == CellState.EMPTY:
+            return 1, 1
+
+        return self.baseline.next_move(board, role)
+
+
 # ------------------------------------------------------------------------------------------
 # below are some hand-crafted strategy
 
@@ -164,7 +184,7 @@ class RobertStrat1(Strategy):
 
 
 class DefensiveStrat1(Strategy):
-    """ another hand-crafted strategy
+    """ based on RandomPlay, but prioritized for defensive moves
     """
     def __init__(self, level=1, debug=False):
         self.baseline = RandomPlay()
@@ -174,7 +194,8 @@ class DefensiveStrat1(Strategy):
     def name(self):
         return 'DefensiveStrat'
 
-    def next_move(self, board, role):
+    def next_move(self, oboard, role):
+        board = oboard.board
         opponent = CellState(role).reverse_role()
 
         # defend each row
@@ -184,7 +205,6 @@ class DefensiveStrat1(Strategy):
                 return irow, idx_empty_spot
 
         # defend each column
-        row_empty, col_empty = 0, 0
         for icol in range(3):
             num_opp, total_stones, idx_empty_spot = count_stones_in_line(
                 (board[0][icol], board[1][icol], board[2][icol]),
@@ -206,4 +226,4 @@ class DefensiveStrat1(Strategy):
             if total_stones == 2 and num_opp == 2:
                 return idx_empty_spot, 2 - idx_empty_spot
 
-        return self.baseline.next_move(board, role)
+        return self.baseline.next_move(oboard, role)
