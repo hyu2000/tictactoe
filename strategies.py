@@ -28,11 +28,11 @@ class Strategy(object):
 
 
 class Human(Strategy):
-    def __init__(self, name='human'):
-        self.name = name
+    def __init__(self):
+        pass
 
     def name(self):
-        return self.name
+        return 'human'
 
     def next_move(self, board):
         while True:

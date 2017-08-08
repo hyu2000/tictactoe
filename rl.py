@@ -62,6 +62,10 @@ class QTable(object):
         val, update_count = self.v[rep]
         return val, update_count
 
+    def contains(self, board):
+        rep = self.representation(board)
+        return rep in self.v
+
     def set(self, board_repr, val):
         self.v[board_repr] = val, 0
 
@@ -95,6 +99,7 @@ class RLStrat(Strategy):
         self.q_table = QTable()
         self.prev_move = None
         self.prev_board_rep = None
+        self.role = None
 
     def name(self):
         return 'RL'
@@ -110,6 +115,7 @@ class RLStrat(Strategy):
 
     def start_game(self, role):
         self.role = role
+        self.prev_board_rep = None
 
         # this (EnumMap) is to speed up value_of() computation
         self.reward_mapping = {
@@ -121,44 +127,46 @@ class RLStrat(Strategy):
 
     def end_game(self, game_result):
         # this could be an important update (if RL plays O)
-        if self.prev_board_rep:
-            self.update(self.prev_board_rep, game_result)
-
-        self.prev_board_rep = None
+        # if RL plays X, we already performed the final update if we chose 'exploit' in the last step
+        if self.role == CellState.O:
+            v_prime = self.reward_mapping[game_result]
+            self.update(self.prev_board_rep, v_prime)
 
     def next_move(self, board):
-        # type: (Board, CellState) -> Tuple[int, int]
+        # type: (Board) -> Tuple[int, int]
         row, col = self._choose_next_move(board)
 
         # record the transition
         # Note we cannot change board state at this moment, wait for game controller to check our move and do it
         board.board[row][col] = self.role
-        self.prev_board_rep = self.q_table.representation(board)
+        self.prev_board_rep, _, _ = self._lookup_qtable_or_init(board)
         board.board[row][col] = CellState.EMPTY
         self.prev_move = row, col
         return row, col
 
     def _choose_next_move(self, board):
+        self.prev_action = 'exploit'
         if random.random() < self.explore_rate:
             # print '>>>>>> explore'
             # TODO we could do an update with some computation
+            self.prev_action = 'explore'
             return self.explore(board)
 
         q_best, (row, col) = self.exploit(board)
-        if self.prev_board_rep:
+        if self.prev_board_rep:  # so long as prev_board_rep exists
             self.update(self.prev_board_rep, q_best)
         return row, col
 
     def exploit(self, board):
-        q_best = -2
+        q_best = -1e10
         best_move = None
         score_board = board.empty_score_board()
         for row, col in board.next_empty_square():
             board.board[row][col] = self.role
-            q, update_count = self._lookup_qtable_or_init(board)
-            score_board[row][col] = '%.1f %g' % (10 * q, update_count)
-            if q > q_best:
-                q_best = q
+            _, q_val, update_count = self._lookup_qtable_or_init(board)
+            score_board[row][col] = '%.1f %g' % (10 * q_val, update_count)
+            if q_val > q_best:
+                q_best = q_val
                 best_move = row, col
             board.board[row][col] = CellState.EMPTY
         if self.debug:
@@ -168,10 +176,7 @@ class RLStrat(Strategy):
     def explore(self, board):
         num_choices = board.num_empty_squares()
         k = int(random.random() * num_choices)
-        for i, (row, col) in enumerate(board.next_empty_square()):
-            if i == k:
-                return row, col
-        raise Exception('Should not reach here')
+        return board.kth_empty_square(k)
 
     def initial_value_of(self, board):
         """ value function
@@ -184,10 +189,10 @@ class RLStrat(Strategy):
         val, update_count = self.q_table.lookup_by_rep(board_rep)
         if val is None:
             val = self.initial_value_of(board)
+            update_count = 0
             self.q_table.set(board_rep, val)
-            return val, 0
 
-        return val, update_count
+        return board_rep, val, update_count
 
     def update(self, prev_board_rep, v_s_prime):
         """ TD update

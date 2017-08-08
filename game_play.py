@@ -23,34 +23,31 @@ class GamePlay(object):
 
         if verbose:
             board.print_board()
+        stone = CellState.PLAYER_X
         for i in range(9):
-            iplayer = i % 2
-            stone = iplayer + 1
-            assert stone == CellState.PLAYER_O or stone == CellState.PLAYER_X
+            player = self.players[i % 2]
 
-            row, col = self.players[iplayer].next_move(board)
+            row, col = player.next_move(board)
 
             if board.board[row][col] != CellState.EMPTY:
-                print 'player %d made an invalid move: (%d, %d)' % (stone, row, col)
+                print '%s made an invalid move: (%d, %d)' % (player.name(), row, col)
                 raise Exception('Debug now!')
             board.board[row][col] = stone
-
             if verbose:
-                print '%dth move, player %d picked row %d, col %d' % (i, stone, row, col)
+                print '%dth move, %s picked row %d, col %d' % (i, player.name(), row, col)
                 board.print_board_with_last_move(row, col)
+            stone = stone.reverse_role()
 
             verdict = board.evaluate()
-            if verdict == GameResult.UNFINISHED:
-                continue
+            if verdict != GameResult.UNFINISHED:
+                break
 
-            if verbose:
-                print verdict.announce()
-            # end game
-            for player in self.players:
-                player.end_game(verdict)
-            return verdict
-
-        raise Exception('Game should have ended!')
+        if verbose:
+            print verdict.announce()
+        # end game
+        for player in self.players:
+            player.end_game(verdict)
+        return verdict
 
     def run_tournament(self, N=100):
         counter = Counter()
@@ -63,10 +60,10 @@ class GamePlay(object):
 
 
 def train_RL(strat1, game):
-    explore_rate = 0.01
+    explore_rate = 0.1
     for i in range(10):
         strat1.set_explore_rate(explore_rate)
-        game.run_tournament(N=500)
+        game.run_tournament(N=10000)
         print 'q_table size, #updates = ', strat1.q_table.stats()
         # explore_rate /= 2
     strat1.q_table.save(PARAM_FILE)
@@ -90,7 +87,7 @@ def run_RL_as_X_against(strat2):
     file (in PARAM_FILE)
     """
     from rl import RLStrat
-    strat1 = RLStrat(CellState.PLAYER_X, 0.1)
+    strat1 = RLStrat(0.1)
     game = GamePlay(strat1, strat2)
     if os.path.exists(PARAM_FILE):
         strat1.q_table.load(PARAM_FILE)
