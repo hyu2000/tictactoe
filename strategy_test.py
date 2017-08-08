@@ -19,7 +19,8 @@ class SimpleTest(TestCase):
 
     def test_Robert_Strat1(self):
         strat = RobertStrat1()
-        row, col = strat.next_move(self.board, 1)
+        strat.start_game(1)
+        row, col = strat.next_move(self.board)
         self.assertEqual((row, col), (0, 2))
 
     def testIterateOverEmptySpots(self):

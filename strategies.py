@@ -1,4 +1,5 @@
-from utils import CellState, GameResult
+from typing import List, Dict, Tuple, Any
+from utils import CellState, GameResult, Board
 import random
 
 
@@ -6,13 +7,24 @@ class Strategy(object):
     def name(self):
         return 'abstract strategy'
 
-    def next_move(self, board, role):
+    def next_move(self, board):
+        # type: (Board, CellState) -> Tuple[int, int]
         """
         :param board:
         :param role: role == ttt.PLAYER_X or O
         :return: row, col
         """
         raise NotImplementedError
+
+    def start_game(self, role):
+        # type: (CellState) -> None
+        """ override to reset states """
+        self.role = role
+
+    def end_game(self, game_result):
+        # type: (GameResult) -> None
+        """ override to learn outcome """
+        pass
 
 
 class Human(Strategy):
@@ -22,7 +34,7 @@ class Human(Strategy):
     def name(self):
         return self.name
 
-    def next_move(self, board, role):
+    def next_move(self, board):
         while True:
             action = raw_input('Your move (row,col) or index (row-major)? ')
             elements = action.split(',')
@@ -46,7 +58,7 @@ class RandomPlay(Strategy):
     def name(self):
         return 'random'
 
-    def next_move(self, board, role):
+    def next_move(self, board):
         num_empty_spots = board.num_empty_squares()
         k = random.randint(0, num_empty_spots - 1)
         return board.kth_empty_square(k)
@@ -62,8 +74,8 @@ class MinMaxStrat(Strategy):
     def name(self):
         return 'MinMax'
 
-    def next_move(self, board, role):
-        best_result, best_move = self.eval_board(board, role)
+    def next_move(self, board):
+        best_result, best_move = self.eval_board(board, self.role)
         if self.verbose:
             print 'MinMax predicts', best_result.announce()
         return best_move
@@ -96,6 +108,8 @@ class MinMaxStrat(Strategy):
 
 class AntiMinMaxStrat(Strategy):
     """ memorized plays against MinMaxStrat (above), otherwise quite dumb
+
+    This always ties against MinMax, but easily loses to RL
     """
     def __init__(self):
         self.baseline = DefensiveStrat1(level=10)
@@ -103,16 +117,43 @@ class AntiMinMaxStrat(Strategy):
     def name(self):
         return 'AntiMinMax'
 
-    def next_move(self, board, role):
-        if role == CellState.PLAYER_X:
+    def start_game(self, role):
+        self.role = role
+        self.baseline.start_game(role)
+
+    def next_move(self, board):
+        if self.role == CellState.PLAYER_X:
             # only acts as O for now
             raise NotImplementedError
 
         if board.num_empty_squares() == 8 and board.board[1][1] == CellState.EMPTY:
             return 1, 1
 
-        return self.baseline.next_move(board, role)
+        return self.baseline.next_move(board)
 
+
+class WeakenedMinMax(Strategy):
+    """
+    1. MinMax is expensive. For tictactoe, just memorize its move
+    2. for a particular board situation, weaken it (to see if opponent can exploit it)
+    """
+    def __init__(self):
+        pass
+
+    def name(self):
+        return 'MinMaxWeakened'
+
+    def start_game(self, role):
+        self.role = role
+        self.baseline.start_game(role)
+
+    def next_move(self, board):
+        if self.role == CellState.PLAYER_X:
+            # only acts as O for now
+            raise NotImplementedError
+
+        if board.num_empty_squares() == 8 and board.board[1][1] == CellState.EMPTY:
+            return 1, 1
 
 # ------------------------------------------------------------------------------------------
 # below are some hand-crafted strategy
@@ -167,10 +208,14 @@ class RobertStrat1(Strategy):
     def name(self):
         return 'RobertStrat'
 
-    def next_move(self, board, role):
+    def start_game(self, role):
+        self.role = role
+        self.baseline.start_game(role)
+
+    def next_move(self, board):
         for irow in range(3):
             row = board.board[irow]
-            num_my_stones, total_stones, idx_empty_spot = count_stones_in_line(row, role)
+            num_my_stones, total_stones, idx_empty_spot = count_stones_in_line(row, self.role)
             if total_stones == 2 and num_my_stones == 2:
                 if self.debug:
                     print '>>>>>>>>>>>> Smart move right here!'
@@ -180,7 +225,7 @@ class RobertStrat1(Strategy):
             #     col = board[0][icol]
             #     num_my_stones, total_stones = count_stones_in_line(col, role)
 
-        return self.baseline.next_move(board, role)
+        return self.baseline.next_move(board)
 
 
 class DefensiveStrat1(Strategy):
@@ -194,9 +239,13 @@ class DefensiveStrat1(Strategy):
     def name(self):
         return 'DefensiveStrat'
 
-    def next_move(self, oboard, role):
+    def start_game(self, role):
+        self.role = role
+        self.baseline.start_game(role)
+
+    def next_move(self, oboard):
         board = oboard.board
-        opponent = CellState(role).reverse_role()
+        opponent = self.role.reverse_role()
 
         # defend each row
         for irow, row in enumerate(board):
@@ -226,4 +275,4 @@ class DefensiveStrat1(Strategy):
             if total_stones == 2 and num_opp == 2:
                 return idx_empty_spot, 2 - idx_empty_spot
 
-        return self.baseline.next_move(oboard, role)
+        return self.baseline.next_move(oboard)

@@ -18,14 +18,17 @@ class GamePlay(object):
 
     def run(self, verbose=True):
         board = Board()
+        self.players[0].start_game(CellState.PLAYER_X)
+        self.players[1].start_game(CellState.PLAYER_O)
+
         if verbose:
             board.print_board()
-        for i in range(8):
+        for i in range(9):
             iplayer = i % 2
             stone = iplayer + 1
             assert stone == CellState.PLAYER_O or stone == CellState.PLAYER_X
 
-            row, col = self.players[iplayer].next_move(board, stone)
+            row, col = self.players[iplayer].next_move(board)
 
             if board.board[row][col] != CellState.EMPTY:
                 print 'player %d made an invalid move: (%d, %d)' % (stone, row, col)
@@ -42,16 +45,12 @@ class GamePlay(object):
 
             if verbose:
                 print verdict.announce()
+            # end game
+            for player in self.players:
+                player.end_game(verdict)
             return verdict
 
-        # last move is trivial if it gets here
-        row, col = board.kth_empty_square(0)
-        board.board[row][col] = CellState.PLAYER_X
-        verdict = board.evaluate()
-        if verbose:
-            board.print_board_with_last_move(row, col)
-            print verdict.announce()
-        return verdict
+        raise Exception('Game should have ended!')
 
     def run_tournament(self, N=100):
         counter = Counter()
@@ -68,7 +67,7 @@ def train_RL(strat1, game):
     for i in range(10):
         strat1.set_explore_rate(explore_rate)
         game.run_tournament(N=500)
-        print 'q_table size = ', strat1.q_table.stats()
+        print 'q_table size, #updates = ', strat1.q_table.stats()
         # explore_rate /= 2
     strat1.q_table.save(PARAM_FILE)
 
@@ -85,15 +84,13 @@ def test_RL(strat_rl, game):
     game.run_tournament(1000)
 
 
-def run_RL_as_X():
+def run_RL_as_X_against(strat2):
     """
     train an RL strategy, then test it. Training RL takes a bit of time, so we auto-save/load a parameter
     file (in PARAM_FILE)
     """
-    from strategies import RobertStrat1, MinMaxStrat, DefensiveStrat1
     from rl import RLStrat
     strat1 = RLStrat(CellState.PLAYER_X, 0.1)
-    strat2 = RobertStrat1()  # pick your favorite player
     game = GamePlay(strat1, strat2)
     if os.path.exists(PARAM_FILE):
         strat1.q_table.load(PARAM_FILE)
@@ -118,7 +115,7 @@ if __name__ == '__main__':
     from strategies import Human, RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1, AntiMinMaxStrat
 
     random.seed(time.time())
-    # rl_strat = run_RL_as_X()
+    rl_strat = run_RL_as_X_against(AntiMinMaxStrat())
 
     # when minmax goes first, we can never win, but you'll learn how to achieve a draw!
-    run_manual_against(AntiMinMaxStrat())
+    # run_manual_against(AntiMinMaxStrat())

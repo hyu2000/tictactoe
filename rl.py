@@ -1,7 +1,13 @@
+from typing import List, Dict, Tuple, Any
 import random
 import pickle
+import logging
 from strategies import Strategy
 from utils import CellState, GameResult, Board
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class QTable0(object):
@@ -22,13 +28,13 @@ class QTable0(object):
                 hash = hash * 3 + val
         return hash
 
-    def look_up(self, board):
+    def lookup(self, board):
         idx = self.representation(board)
         if self.v[idx] < 0:
             self.v[idx] = self.value_func(board)
         return self.v[idx]
 
-    def look_up_by_rep(self, rep):
+    def lookup_by_rep(self, rep):
         return self.v[rep]
 
     def update(self, board_repr, val):
@@ -36,41 +42,44 @@ class QTable0(object):
 
 
 class QTable(object):
-    def __init__(self, value_func):
+    def __init__(self):
         self.v = {}
-        self.value_func = value_func
-
         self.total_num_updates = 0
 
     def representation(self, board):
+        # type: (Board) -> Tuple[Tuple, Tuple, Tuple]
         board = board.board
         return tuple(board[0]), tuple(board[1]), tuple(board[2])
 
-    def look_up(self, board):
+    def lookup(self, board):
         rep = self.representation(board)
-        return self.look_up_by_rep(rep)
+        return self.lookup_by_rep(rep)
 
-    def look_up_by_rep(self, rep):
-        if rep in self.v:
-            val, update_count = self.v[rep]
-            return val, update_count
-        val = self.value_func(rep)
-        self.v[rep] = val, 0
-        return val, 0
+    def lookup_by_rep(self, rep):
+        if rep not in self.v:
+            return None, None
+
+        val, update_count = self.v[rep]
+        return val, update_count
+
+    def set(self, board_repr, val):
+        self.v[board_repr] = val, 0
 
     def update(self, board_repr, val):
-        _, count = self.v[board_repr]
-        self.v[board_repr] = val, count + 1
+        _, update_count = self.v[board_repr]
+        self.v[board_repr] = val, update_count + 1
         self.total_num_updates += 1
 
     def stats(self):
         return len(self.v), self.total_num_updates
 
     def save(self, filename):
+        logger.info('saving qtable to %s', filename)
         with open(filename, 'w') as f:
             pickle.dump(self.v, f)
 
     def load(self, filename):
+        logger.info('loading qtable from %s', filename)
         with open(filename, 'r') as f:
             self.v = pickle.load(f)
 
@@ -78,13 +87,12 @@ class QTable(object):
 class RLStrat(Strategy):
     """ Reinforcement Learning
     """
-    def __init__(self, role, learn_rate, explore_rate=0.1, debug=False):
-        self.role = role
+    def __init__(self, learn_rate, explore_rate=0.1, debug=False):
         self.learn_rate = learn_rate
         self.explore_rate = explore_rate
         self.debug = debug
 
-        self.q_table = QTable(self.value_of)
+        self.q_table = QTable()
         self.prev_move = None
         self.prev_board_rep = None
 
@@ -100,28 +108,31 @@ class RLStrat(Strategy):
     def set_learn_rate(self, rate):
         self.learn_rate = rate
 
-    def value_of(self, board_rep):
-        """ value function
-        """
-        board = Board(init_state=board_rep)
-        verdict = board.evaluate()
-        if verdict == self.role:
-            return 1.0
-        elif verdict == self.role.reverse_role():
-            return 0
-        elif verdict == GameResult.DRAW:
-            return 0
-        else:  # UNFINISHED
-            return 0.5
+    def start_game(self, role):
+        self.role = role
 
-    def next_move(self, board, role):
-        assert role == self.role
+        # this (EnumMap) is to speed up value_of() computation
+        self.reward_mapping = {
+            GameResult.from_role(self.role): 1.0,
+            GameResult.from_role(self.role.reverse_role()): 0,
+            GameResult.DRAW: 0,
+            GameResult.UNFINISHED: 0.5
+        }
 
+    def end_game(self, game_result):
+        # this could be an important update (if RL plays O)
+        if self.prev_board_rep:
+            self.update(self.prev_board_rep, game_result)
+
+        self.prev_board_rep = None
+
+    def next_move(self, board):
+        # type: (Board, CellState) -> Tuple[int, int]
         row, col = self._choose_next_move(board)
 
         # record the transition
         # Note we cannot change board state at this moment, wait for game controller to check our move and do it
-        board.board[row][col] = role
+        board.board[row][col] = self.role
         self.prev_board_rep = self.q_table.representation(board)
         board.board[row][col] = CellState.EMPTY
         self.prev_move = row, col
@@ -144,8 +155,8 @@ class RLStrat(Strategy):
         score_board = board.empty_score_board()
         for row, col in board.next_empty_square():
             board.board[row][col] = self.role
-            q, update_count = self.q_table.look_up(board)
-            score_board[row][col] = '%.3f %3.1g' % (10 * q, update_count)
+            q, update_count = self._lookup_qtable_or_init(board)
+            score_board[row][col] = '%.1f %g' % (10 * q, update_count)
             if q > q_best:
                 q_best = q
                 best_move = row, col
@@ -162,9 +173,25 @@ class RLStrat(Strategy):
                 return row, col
         raise Exception('Should not reach here')
 
+    def initial_value_of(self, board):
+        """ value function
+        """
+        verdict = board.evaluate()
+        return self.reward_mapping[verdict]
+
+    def _lookup_qtable_or_init(self, board):
+        board_rep = self.q_table.representation(board)
+        val, update_count = self.q_table.lookup_by_rep(board_rep)
+        if val is None:
+            val = self.initial_value_of(board)
+            self.q_table.set(board_rep, val)
+            return val, 0
+
+        return val, update_count
+
     def update(self, prev_board_rep, v_s_prime):
+        """ TD update
         """
-        """
-        v_s, _ = self.q_table.look_up_by_rep(prev_board_rep)
+        v_s, _ = self.q_table.lookup_by_rep(prev_board_rep)
         delta = self.learn_rate * (v_s_prime - v_s)
         self.q_table.update(prev_board_rep, v_s + delta)
