@@ -10,35 +10,36 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-class QTable0(object):
-    """ encode every board configuration as an int (3**9, this over-estimates as it
-    allows illegal cases)
+class StateCount(object):
+    """ count # game states
     """
-    def __init__(self, value_func):
-        self.v = [-1 for i in range(3**9)]
-        self.value_func = value_func
+    def __init__(self):
+        pass
 
-    def representation(self, board):
-        """
-        :return: a unique int for a board configuration
-        """
-        hash = 0
-        for row in board:
-            for val in row:
-                hash = hash * 3 + val
-        return hash
+    @classmethod
+    def P(cls, N, k):
+        prod = 1
+        for i in xrange(k):
+            prod *= N - i
+        return prod
 
-    def lookup(self, board):
-        idx = self.representation(board)
-        if self.v[idx] < 0:
-            self.v[idx] = self.value_func(board)
-        return self.v[idx]
+    @classmethod
+    def C(cls, N, k):
+        return cls.P(N, k) / cls.P(k, k)
 
-    def lookup_by_rep(self, rep):
-        return self.v[rep]
+    @classmethod
+    def num_states_for_step(self, i):
+        num_O = i / 2
+        num_X = i - num_O
+        return self.C(9, num_X) * self.C(9 - num_X, num_O)
 
-    def update(self, board_repr, val):
-        self.v[board_repr] = val
+    @classmethod
+    def total_num_states_for_X(self):
+        return sum([self.num_states_for_step(i) for i in xrange(1, 10, 2)])
+
+    @classmethod
+    def total_num_states_for_O(self):
+        return sum([self.num_states_for_step(i) for i in xrange(2, 10, 2)])
 
 
 class QTable(object):
@@ -128,7 +129,7 @@ class RLStrat(Strategy):
     def end_game(self, game_result):
         # this could be an important update (if RL plays O)
         # if RL plays X, we already performed the final update if we chose 'exploit' in the last step
-        if self.role == CellState.O:
+        if self.role == CellState.PLAYER_O:
             v_prime = self.reward_mapping[game_result]
             self.update(self.prev_board_rep, v_prime)
 
