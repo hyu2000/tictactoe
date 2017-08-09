@@ -2,7 +2,7 @@ import random
 import unittest
 import time
 
-from strategies import MinMaxStrat, AntiMinMaxStrat, DefensiveStrat1, MinMaxWithQTable
+from strategies import MinMaxStrat, AntiMinMaxStrat, DefensiveStrat1, MinMaxWithQTable, WeakenedMinMax
 from game_play import GamePlay
 from utils import GameResult
 
@@ -20,9 +20,11 @@ class Competition(unittest.TestCase):
         pctg = game.run_tournament(100)
         self.assertAlmostEqual(pctg[2], 1.0)
 
-    def test_def_minmax(self):
-        # game = GamePlay(, AntiMinMaxStrat())
+    def test_weakened_vs_minmax(self):
+        game = GamePlay(MinMaxWithQTable(), WeakenedMinMax())
         verdict = game.run(verbose=True)
-        # self.assertEqual(verdict, GameResult.DRAW)
+        self.assertEqual(verdict, GameResult.DRAW)
 
-        game.run_tournament(3)
+        pctg = game.run_tournament(100)
+        self.assertAlmostEqual(pctg[2], 1.0)
+

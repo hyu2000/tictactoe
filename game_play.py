@@ -101,18 +101,21 @@ def run_manual_against(strat, human_as=CellState.PLAYER_X):
     """ play a manual game vs a strategy (human in the specified role)
     """
     if human_as == CellState.PLAYER_X:
-        game = GamePlay(Human(), strat)
+        game = GamePlay(strategies.Human(), strat)
     else:
-        game = GamePlay(strat, Human())
+        game = GamePlay(strat, strategies.Human())
 
     game.run()
     # game.run_tournament(5000)
 
 if __name__ == '__main__':
-    from strategies import Human, RandomPlay, RobertStrat1, MinMaxStrat, DefensiveStrat1, AntiMinMaxStrat
+    import strategies
+
+    # strat = strategies.MinMaxWithQTable()
+    strat = strategies.WeakenedMinMax()
 
     random.seed(time.time())
-    rl_strat = run_RL_as_X_against(AntiMinMaxStrat())
+    # rl_strat = run_RL_as_X_against(strat)
 
     # when minmax goes first, we can never win, but you'll learn how to achieve a draw!
-    # run_manual_against(AntiMinMaxStrat())
+    run_manual_against(strat)

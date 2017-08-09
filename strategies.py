@@ -1,6 +1,11 @@
 from typing import List, Dict, Tuple, Any
 from utils import CellState, GameResult, Board, QTable
 import random
+import logging
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class Strategy(object):
@@ -189,7 +194,19 @@ class WeakenedMinMax(Strategy):
     2. for a particular board situation, weaken it (to see if opponent can exploit it)
     """
     def __init__(self):
-        pass
+        self.q_table = QTable()
+        self.q_table.load('/tmp/minmax.qtable')
+        self.hack_q_table()
+
+        self.baseline = MinMaxStrat()
+
+    def hack_q_table(self):
+        logger.info('hacking qtable')
+        board = Board()
+        board.board[0][2] = CellState.PLAYER_X
+        # minmax has to choose (1, 1)
+        board_rep = self.q_table.representation(board)
+        self.q_table.set(board_rep, (GameResult.DRAW, (0, 1)))
 
     def name(self):
         return 'MinMaxWeakened'
@@ -199,12 +216,12 @@ class WeakenedMinMax(Strategy):
         self.baseline.start_game(role)
 
     def next_move(self, board):
-        if self.role == CellState.PLAYER_X:
-            # only acts as O for now
-            raise NotImplementedError
-
-        if board.num_empty_squares() == 8 and board.board[1][1] == CellState.EMPTY:
-            return 1, 1
+        val, _ = self.q_table.lookup(board)
+        if val is None:
+            logger.info('backoff to minmax')
+            return self.baseline.next_move(board)
+        best_possible_result, best_move = val
+        return best_move
 
 # ------------------------------------------------------------------------------------------
 # below are some hand-crafted strategy
