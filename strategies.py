@@ -1,5 +1,5 @@
 from typing import List, Dict, Tuple, Any
-from utils import CellState, GameResult, Board
+from utils import CellState, GameResult, Board, QTable
 import random
 
 
@@ -130,6 +130,57 @@ class AntiMinMaxStrat(Strategy):
             return 1, 1
 
         return self.baseline.next_move(board)
+
+
+class MinMaxWithQTable(Strategy):
+    """
+    this speeds up MinMax thru QTable caching;
+    also allows us to produce MinMax variants easily
+    """
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+        self.q_table = QTable()
+
+    def name(self):
+        return 'MinMaxQT'
+
+    def next_move(self, board):
+        best_result, best_move = self.eval_board(board, self.role)
+        return best_move
+
+    def eval_board(self, board, role):
+        val, _ = self.q_table.lookup(board)
+        if val is not None:
+            return val
+
+        # calculate
+        next_role = CellState(role).reverse_role()
+        best_possible_result = None
+        best_move = None
+        for (row, col) in board.next_empty_square():
+            try:
+                board.board[row][col] = role
+                result = board.evaluate()
+                if result == GameResult.UNFINISHED:
+                    result, _ = self.eval_board(board, next_role)
+                if result == role:
+                    best_possible_result, best_move = result, (row, col)
+                    break
+                elif result == GameResult.DRAW:
+                    # this will pick the last draw move, if several leads to draw
+                    best_possible_result = result
+                    best_move = (row, col)
+                elif best_move is None:
+                    # so that we can return a valid move if cannot draw
+                    best_possible_result = result
+                    best_move = (row, col)
+            finally:
+                board.board[row][col] = CellState.EMPTY
+
+        # cache
+        board_rep = self.q_table.representation(board)
+        self.q_table.set(board_rep, (best_possible_result, best_move))
+        return best_possible_result, best_move
 
 
 class WeakenedMinMax(Strategy):

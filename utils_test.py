@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from utils import Board, GameResult, CellState
+from utils import Board, GameResult, CellState, QTable
 
 
 class BasicTest(TestCase):
@@ -34,3 +34,12 @@ class BasicTest(TestCase):
         self.assertEqual(GameResult.X_WINS, CellState.PLAYER_X)
         self.assertEqual(GameResult.O_WINS, CellState.PLAYER_O)
         self.assertNotEqual(GameResult.X_WINS, CellState.PLAYER_O)
+
+    def test_board_rep(self):
+        q_table = QTable()
+        tpl1 = (1, 0, 2)
+        tpl2 = (CellState.PLAYER_X, CellState.EMPTY, CellState.PLAYER_O)
+        tpl3 = (1, 0, CellState.PLAYER_O)
+        print hash(tpl1)
+        self.assertEqual(hash(tpl1), hash(tpl2))
+        self.assertEqual(hash(tpl1), hash(tpl3))

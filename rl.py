@@ -1,9 +1,8 @@
 from typing import List, Dict, Tuple, Any
 import random
-import pickle
 import logging
 from strategies import Strategy
-from utils import CellState, GameResult, Board
+from utils import CellState, GameResult, Board, QTable
 
 
 logger = logging.getLogger(__name__)
@@ -40,53 +39,6 @@ class StateCount(object):
     @classmethod
     def total_num_states_for_O(self):
         return sum([self.num_states_for_step(i) for i in xrange(2, 10, 2)])
-
-
-class QTable(object):
-    def __init__(self):
-        self.v = {}
-        self.total_num_updates = 0
-
-    def representation(self, board):
-        # type: (Board) -> Tuple[Tuple, Tuple, Tuple]
-        board = board.board
-        return tuple(board[0]), tuple(board[1]), tuple(board[2])
-
-    def lookup(self, board):
-        rep = self.representation(board)
-        return self.lookup_by_rep(rep)
-
-    def lookup_by_rep(self, rep):
-        if rep not in self.v:
-            return None, None
-
-        val, update_count = self.v[rep]
-        return val, update_count
-
-    def contains(self, board):
-        rep = self.representation(board)
-        return rep in self.v
-
-    def set(self, board_repr, val):
-        self.v[board_repr] = val, 0
-
-    def update(self, board_repr, val):
-        _, update_count = self.v[board_repr]
-        self.v[board_repr] = val, update_count + 1
-        self.total_num_updates += 1
-
-    def stats(self):
-        return len(self.v), self.total_num_updates
-
-    def save(self, filename):
-        logger.info('saving qtable to %s', filename)
-        with open(filename, 'w') as f:
-            pickle.dump(self.v, f)
-
-    def load(self, filename):
-        logger.info('loading qtable from %s', filename)
-        with open(filename, 'r') as f:
-            self.v = pickle.load(f)
 
 
 class RLStrat(Strategy):

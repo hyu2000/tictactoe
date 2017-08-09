@@ -1,6 +1,6 @@
 from unittest import TestCase
 from utils import Board, CellState, GameResult
-from strategies import difloc, RobertStrat1, MinMaxStrat
+from strategies import difloc, RobertStrat1, MinMaxStrat, MinMaxWithQTable
 
 
 class SimpleTest(TestCase):
@@ -28,44 +28,60 @@ class SimpleTest(TestCase):
 
 
 class MinMaxTest(TestCase):
+    def setUp(self):
+        self.strat = MinMaxStrat()
+        # self.strat = MinMaxWithQTable()
+
     def test_end_game(self):
-        strat = MinMaxStrat()
         board = Board([
             [1, 2, 2],
             [2, 2, 1],
             [1, 0, 0]])
         # defensive move
-        result, move = strat.eval_board(board, 1)
+        result, move = self.strat.eval_board(board, 1)
         self.assertEqual(result, GameResult.DRAW)
         self.assertEqual(move, (2, 1))
 
         # offensive move
-        result, move = strat.eval_board(board, 2)
+        result, move = self.strat.eval_board(board, 2)
         self.assertEqual(result, GameResult.O_WINS)
         self.assertEqual(move, (2, 1))
 
     def test_mid_game(self):
-        strat = MinMaxStrat()
         board = Board([
             [1, 2, 2],
             [2, 0, 1],
             [1, 0, 0]])
         # X's move
-        result, move = strat.eval_board(board, 1)
+        result, move = self.strat.eval_board(board, 1)
         self.assertEqual(result, GameResult.X_WINS)
         self.assertEqual(move, (2, 2))
 
         # O's move
-        result, move = strat.eval_board(board, 2)
+        result, move = self.strat.eval_board(board, 2)
         self.assertEqual(result, GameResult.DRAW)
 
     def test_open_game(self):
-        strat = MinMaxStrat()
         board = Board([
             [1, 2, 0],
             [0, 0, 0],
             [0, 0, 0]])
         # X's move
-        result, move = strat.eval_board(board, 1)
+        result, move = self.strat.eval_board(board, 1)
         self.assertEqual(result, GameResult.X_WINS)
         # self.assertEqual(move, (1, 0))
+
+
+class MinMaxQTTest(TestCase):
+    def setUp(self):
+        self.strat = MinMaxWithQTable()
+
+    def test_qtable(self):
+        board = Board()
+        best_result, best_move = self.strat.eval_board(board, CellState.PLAYER_X)
+        print best_result, best_move
+        # 3964 states: once we find a win, no need to explore other branches
+        print self.strat.q_table.stats()
+        print self.strat.q_table.stats_by_num_stones().items()
+
+        self.strat.q_table.save('/tmp/minmax.qtable')

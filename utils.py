@@ -1,5 +1,12 @@
-from collections import namedtuple
+from typing import List, Dict, Tuple, Any
+import logging
+import pickle
 import enum
+from collections import Counter
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 # all ints
@@ -140,3 +147,65 @@ class Board(object):
                 if board[i][j] == CellState.EMPTY:
                     return GameResult.UNFINISHED
         return GameResult.DRAW
+
+
+class QTable(object):
+    """ Q-value table: maps board states to (val, update_count)
+
+    mainly for RL, but we can pretty much store arbitrary values in it
+    """
+
+    def __init__(self):
+        self.v = {}
+        self.total_num_updates = 0
+
+    def representation(self, board):
+        # type: (Board) -> Tuple[Tuple, Tuple, Tuple]
+        board = board.board
+        return tuple(board[0]), tuple(board[1]), tuple(board[2])
+
+    def lookup(self, board):
+        rep = self.representation(board)
+        return self.lookup_by_rep(rep)
+
+    def lookup_by_rep(self, rep):
+        if rep not in self.v:
+            return None, None
+
+        val, update_count = self.v[rep]
+        return val, update_count
+
+    def contains(self, board):
+        rep = self.representation(board)
+        return rep in self.v
+
+    def set(self, board_repr, val):
+        self.v[board_repr] = val, 0
+
+    def update(self, board_repr, val):
+        _, update_count = self.v[board_repr]
+        self.v[board_repr] = val, update_count + 1
+        self.total_num_updates += 1
+
+    def save(self, filename):
+        logger.info('saving qtable to %s', filename)
+        with open(filename, 'w') as f:
+            pickle.dump(self.v, f)
+
+    def load(self, filename):
+        logger.info('loading qtable from %s', filename)
+        with open(filename, 'r') as f:
+            self.v = pickle.load(f)
+
+    def stats(self):
+        return len(self.v), self.total_num_updates
+
+    def _num_stones_in_rep(self, board_rep):
+        return 9 - Board(init_state=board_rep).num_empty_squares()
+
+    def stats_by_num_stones(self):
+        counter = Counter()
+        for board_rep, val in self.v.iteritems():
+            num_stones = self._num_stones_in_rep(board_rep)
+            counter[num_stones] += 1
+        return counter
