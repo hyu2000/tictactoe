@@ -200,9 +200,9 @@ class WeakenedMinMax(Strategy):
     1. MinMax is expensive. For tictactoe, just memorize its move
     2. for a particular board situation, weaken it (to see if opponent can exploit it)
     """
-    def __init__(self):
+    def __init__(self, qtable_file):
         self.q_table = QTable()
-        self.q_table.load('/tmp/minmax.qtable')
+        self.q_table.load(qtable_file)
         self.hack_q_table()
 
         self.baseline = MinMaxStrat()

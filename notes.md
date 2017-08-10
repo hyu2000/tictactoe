@@ -33,8 +33,10 @@ But if you look at one of the games, RL really exploits the defensive nature of
 its opponent. When there are already two Os in a row, RL proceeds to get two Xs
 line up, knowing that AntiMinMax would always prioritize for defensive moves.
 
+Next, we explore a more worth opponent: weakened MinMax.
 
-RL (X) against WeakenedMinMax (O)
+
+To Weaken MinMax, I end up improve it first
 =============================
 I weaken minmax in exactly one state. In the following setup, minmax has to pick
 4 (center of the board). I changed it to pick 1 instead -- which would lead to a loss.
@@ -56,5 +58,46 @@ If I move next on 4, strangely minmax picks 0, very bad. Why?
 |       6|       7|       8|
 ----------------------------
 
-My hunch is that minmax simply sees no way to draw, and thinks all moves are equally
-bad. We need a fine-grained evaluation of moves: survival time?
+My hunch is that minmax simply sees no way to win/draw. Since all moves leads to defeat,
+it just picks a random move. We need a fine-grained evaluation of moves: minimum number 
+of moves to win or maximum number of moves to avoid loss. The old MinMax strategy is 
+renamed to MinMaxCrude, the new MinMax is much more reasonable!
+
+
+RL (X) against WeakenedMinMax (O)
+=============================
+
+Below is the training log of RL against WeakenedMinMax. Once it discovers the hole, 
+the tide is turned. Nonetheless, it does take a while, more than 50k games, to 
+discover the loop-hole!
+
+10000 runs: (X win, X lose, tie) = [0.0, 0.9947, 0.0053]
+q_table size, #updates =  (333, 18551)
+10000 runs: (X win, X lose, tie) = [0.0, 0.9974, 0.0026]
+q_table size, #updates =  (359, 37101)
+10000 runs: (X win, X lose, tie) = [0.0, 0.9966, 0.0034]
+q_table size, #updates =  (372, 55553)
+10000 runs: (X win, X lose, tie) = [0.0, 0.9974, 0.0026]
+q_table size, #updates =  (396, 74059)
+10000 runs: (X win, X lose, tie) = [0.0, 0.9969, 0.0031]
+q_table size, #updates =  (396, 92660)
+10000 runs: (X win, X lose, tie) = [0.0001, 0.9971, 0.0028]
+q_table size, #updates =  (400, 111180)
+10000 runs: (X win, X lose, tie) = [0.4416, 0.5447, 0.0137]
+q_table size, #updates =  (417, 134337)
+10000 runs: (X win, X lose, tie) = [0.7809, 0.199, 0.0201]
+q_table size, #updates =  (431, 160836)
+10000 runs: (X win, X lose, tie) = [0.7871, 0.191, 0.0219]
+q_table size, #updates =  (433, 187394)
+INFO:utils:saving qtable to /tmp/rl.pickle
+10000 runs: (X win, X lose, tie) = [0.7887, 0.1871, 0.0242]
+q_table size, #updates =  (433, 214113)
+
+Side note: I intentionally tried to make the loop hole hard to stumble upon 
+by requiring the first move to be at top-right. Well, that may not be completely
+true, but I did observe RL likes to explore the first move at top-left. Maybe it's
+something with our randomization. The real difficulty is that even when RL stumbles
+on the designed configuration, it needs to play a while to figure out a way to win
+in this setup. It's playing against MinMax after all.
+
+Once the winning setup is revealed, RL exploits the trap all the time.

@@ -21,7 +21,7 @@ class Competition(unittest.TestCase):
         self.assertAlmostEqual(pctg[2], 1.0)
 
     def test_weakened_vs_minmax(self):
-        game = GamePlay(MinMaxWithQTable(), WeakenedMinMax())
+        game = GamePlay(MinMaxWithQTable(), WeakenedMinMax('/tmp/minmax.qtable'))
         verdict = game.run(verbose=True)
         self.assertEqual(verdict, GameResult.DRAW)
 

@@ -108,14 +108,27 @@ def run_manual_against(strat, human_as=CellState.PLAYER_X):
     game.run()
     # game.run_tournament(5000)
 
+
+def save_minmax_qtable():
+    strat = strategies.MinMaxWithQTable()
+
+    board = Board()
+    best_result, best_move = strat.eval_board(board, CellState.PLAYER_X)
+    # 3964 states: once we find a win, no need to explore other branches
+    print strat.q_table.stats()
+    print strat.q_table.stats_by_num_stones().items()
+
+    strat.q_table.save('/tmp/minmax.qtable')
+
+
 if __name__ == '__main__':
     import strategies
 
     # strat = strategies.MinMaxWithQTable()
-    strat = strategies.WeakenedMinMax()
+    strat = strategies.WeakenedMinMax('/tmp/minmax.qtable')
 
     random.seed(time.time())
-    # rl_strat = run_RL_as_X_against(strat)
+    rl_strat = run_RL_as_X_against(strat)
 
     # when minmax goes first, we can never win, but you'll learn how to achieve a draw!
-    run_manual_against(strat)
+    # run_manual_against(strat)

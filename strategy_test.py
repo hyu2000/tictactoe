@@ -93,7 +93,8 @@ class MinMaxQTTest(TestCase):
         board = Board()
         best_result, best_move = self.strat.eval_board(board, CellState.PLAYER_X)
         print best_result, best_move
-        # 3964 states: once we find a win, no need to explore other branches
+        # MinMaxCrude: 3964 states: once we find a win, no need to explore other branches
+        # MinMax: 4520 states
         print self.strat.q_table.stats()
         print self.strat.q_table.stats_by_num_stones().items()
 
