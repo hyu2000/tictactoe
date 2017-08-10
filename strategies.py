@@ -69,6 +69,49 @@ class RandomPlay(Strategy):
         return board.kth_empty_square(k)
 
 
+class MinMaxCrude(Strategy):
+    """ the first MinMax I coded. It works but only cares about win/lose/draw. It could lose in a surprising way
+    if it thinks the best outcome is lose.
+    """
+
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
+    def name(self):
+        return 'MinMax'
+
+    def next_move(self, board):
+        best_result, best_move = self.eval_board(board, self.role)
+        if self.verbose:
+            print 'MinMax predicts', best_result.announce()
+        return best_move
+
+    def eval_board(self, board, role):
+        next_role = CellState(role).reverse_role()
+        best_possible_result = None
+        best_move = None
+        for (row, col) in board.next_empty_square():
+            try:
+                board.board[row][col] = role
+                result = board.evaluate()
+                if result == GameResult.UNFINISHED:
+                    result, _ = self.eval_board(board, next_role)
+                if result == role:
+                    return result, (row, col)
+                elif result == GameResult.DRAW:
+                    # this will pick the last draw move, if several leads to draw
+                    best_possible_result = result
+                    best_move = (row, col)
+                elif best_move is None:
+                    # so that we can return a valid move if cannot draw
+                    best_possible_result = result
+                    best_move = (row, col)
+            finally:
+                board.board[row][col] = CellState.EMPTY
+
+        return best_possible_result, best_move
+
+
 class MinMaxStrat(Strategy):
     """ the deep search strategy, assuming opponent plays optimally
     """
@@ -125,21 +168,18 @@ class MinMaxStrat(Strategy):
         return current_best_score, best_move
 
 
-class MinMaxWithQTable(Strategy):
+class MinMaxWithQTable(MinMaxStrat):
     """
     this speeds up MinMax thru QTable caching;
     also allows us to produce MinMax variants easily
     """
-    def __init__(self, verbose=False):
-        self.verbose = verbose
+    def __init__(self):
+        super(MinMaxWithQTable, self).__init__()
+
         self.q_table = QTable()
 
     def name(self):
         return 'MinMaxQT'
-
-    def next_move(self, board):
-        best_result, best_move = self.eval_board(board, self.role)
-        return best_move
 
     def eval_board(self, board, role):
         val, _ = self.q_table.lookup(board)
@@ -147,33 +187,12 @@ class MinMaxWithQTable(Strategy):
             return val
 
         # calculate
-        next_role = CellState(role).reverse_role()
-        best_possible_result = None
-        best_move = None
-        for (row, col) in board.next_empty_square():
-            try:
-                board.board[row][col] = role
-                result = board.evaluate()
-                if result == GameResult.UNFINISHED:
-                    result, _ = self.eval_board(board, next_role)
-                if result == role:
-                    best_possible_result, best_move = result, (row, col)
-                    break
-                elif result == GameResult.DRAW:
-                    # this will pick the last draw move, if several leads to draw
-                    best_possible_result = result
-                    best_move = (row, col)
-                elif best_move is None:
-                    # so that we can return a valid move if cannot draw
-                    best_possible_result = result
-                    best_move = (row, col)
-            finally:
-                board.board[row][col] = CellState.EMPTY
+        val = super(MinMaxWithQTable, self).eval_board(board, role)
 
         # cache
         board_rep = self.q_table.representation(board)
-        self.q_table.set(board_rep, (best_possible_result, best_move))
-        return best_possible_result, best_move
+        self.q_table.set(board_rep, val)
+        return val
 
 
 class WeakenedMinMax(Strategy):
@@ -213,7 +232,7 @@ class WeakenedMinMax(Strategy):
 
 
 class AntiMinMaxStrat(Strategy):
-    """ memorized plays against MinMaxStrat (above), otherwise quite dumb
+    """ mostly DefensiveStrat1, but memorized one play against MinMaxStrat
 
     This always ties against MinMax, but easily loses to RL
     """

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from utils import Board, GameResult, CellState, QTable
+from utils import Board, GameResult, CellState, QTable, StateCount
 
 
 class BasicTest(TestCase):
@@ -43,3 +43,15 @@ class BasicTest(TestCase):
         print hash(tpl1)
         self.assertEqual(hash(tpl1), hash(tpl2))
         self.assertEqual(hash(tpl1), hash(tpl3))
+
+    def test_state_counts(self):
+        self.assertEqual(StateCount.num_states_for_step(1), 9)
+        print [StateCount.num_states_for_step(i) for i in xrange(1, 10)]
+        # [9, 72, 252, 756, 1260, 1680, 1260, 630, 126]
+        total_num_states_for_x = StateCount.total_num_states_for_X()
+        total_num_states_for_o = StateCount.total_num_states_for_O()
+        print 'total #states for X', total_num_states_for_x
+        print 'total #states for O', total_num_states_for_o
+        print '3**9 =', 3**9
+        self.assertEqual(total_num_states_for_x, 2907)
+        self.assertEqual(total_num_states_for_o, 3138)

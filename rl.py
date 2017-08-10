@@ -9,38 +9,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-class StateCount(object):
-    """ count # game states
-    """
-    def __init__(self):
-        pass
-
-    @classmethod
-    def P(cls, N, k):
-        prod = 1
-        for i in xrange(k):
-            prod *= N - i
-        return prod
-
-    @classmethod
-    def C(cls, N, k):
-        return cls.P(N, k) / cls.P(k, k)
-
-    @classmethod
-    def num_states_for_step(self, i):
-        num_O = i / 2
-        num_X = i - num_O
-        return self.C(9, num_X) * self.C(9 - num_X, num_O)
-
-    @classmethod
-    def total_num_states_for_X(self):
-        return sum([self.num_states_for_step(i) for i in xrange(1, 10, 2)])
-
-    @classmethod
-    def total_num_states_for_O(self):
-        return sum([self.num_states_for_step(i) for i in xrange(2, 10, 2)])
-
-
 class RLStrat(Strategy):
     """ Reinforcement Learning
     """
