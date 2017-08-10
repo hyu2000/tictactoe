@@ -7,6 +7,7 @@ with our (non-randomized) MinMax strategy.
 As you can see from the training log, RL quickly learns to defeat AntiMinMax with
 winning rate approaching 90%: 
 
+```
 10000 runs: (X win, X lose, tie) = [0.462, 0.4799, 0.0581]
 q_table size, #updates =  (607, 26766)
 10000 runs: (X win, X lose, tie) = [0.5599, 0.3837, 0.0564]
@@ -28,6 +29,7 @@ q_table size, #updates =  (1120, 255941)
 INFO:rl:saving qtable to /tmp/rl.pickle
 10000 runs: (X win, X lose, tie) = [0.8916, 0.0583, 0.0501]
 q_table size, #updates =  (1120, 284237)
+```
 
 But if you look at one of the games, RL really exploits the defensive nature of 
 its opponent. When there are already two Os in a row, RL proceeds to get two Xs
@@ -41,6 +43,7 @@ To Weaken MinMax, I end up improve it first
 I weaken minmax in exactly one state. In the following setup, minmax has to pick
 4 (center of the board). I changed it to pick 1 instead -- which would lead to a loss.
 
+```
 +--------------------------+
 |       0|  (O)  1|   X   2|
 |--------------------------|
@@ -48,8 +51,10 @@ I weaken minmax in exactly one state. In the following setup, minmax has to pick
 |--------------------------|
 |       6|       7|       8|
 ----------------------------
+```
 
 If I move next on 4, strangely minmax picks 0, very bad. Why? 
+```
 +--------------------------+
 |  (O)  0|   O   1|   X   2|
 |--------------------------|
@@ -57,6 +62,7 @@ If I move next on 4, strangely minmax picks 0, very bad. Why?
 |--------------------------|
 |       6|       7|       8|
 ----------------------------
+```
 
 My hunch is that minmax simply sees no way to win/draw. Since all moves leads to defeat,
 it just picks a random move. We need a fine-grained evaluation of moves: minimum number 
@@ -71,6 +77,7 @@ Below is the training log of RL against WeakenedMinMax. Once it discovers the ho
 the tide is turned. Nonetheless, it does take a while, more than 50k games, to 
 discover the loop-hole!
 
+```
 10000 runs: (X win, X lose, tie) = [0.0, 0.9947, 0.0053]
 q_table size, #updates =  (333, 18551)
 10000 runs: (X win, X lose, tie) = [0.0, 0.9974, 0.0026]
@@ -92,6 +99,7 @@ q_table size, #updates =  (433, 187394)
 INFO:utils:saving qtable to /tmp/rl.pickle
 10000 runs: (X win, X lose, tie) = [0.7887, 0.1871, 0.0242]
 q_table size, #updates =  (433, 214113)
+```
 
 Side note: I intentionally tried to make the loop hole hard to stumble upon 
 by requiring the first move to be at top-right. Well, that may not be completely
