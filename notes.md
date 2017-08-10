@@ -34,5 +34,27 @@ its opponent. When there are already two Os in a row, RL proceeds to get two Xs
 line up, knowing that AntiMinMax would always prioritize for defensive moves.
 
 
-RL against WeakenedMinMax
+RL (X) against WeakenedMinMax (O)
 =============================
+I weaken minmax in exactly one state. In the following setup, minmax has to pick
+4 (center of the board). I changed it to pick 1 instead -- which would lead to a loss.
+
++--------------------------+
+|       0|  (O)  1|   X   2|
+|--------------------------|
+|       3|       4|       5|
+|--------------------------|
+|       6|       7|       8|
+----------------------------
+
+If I move next on 4, strangely minmax picks 0, very bad. Why? 
++--------------------------+
+|  (O)  0|   O   1|   X   2|
+|--------------------------|
+|       3|   X   4|       5|
+|--------------------------|
+|       6|       7|       8|
+----------------------------
+
+My hunch is that minmax simply sees no way to draw, and thinks all moves are equally
+bad. We need a fine-grained evaluation of moves: survival time?

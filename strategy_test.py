@@ -39,12 +39,12 @@ class MinMaxTest(TestCase):
             [1, 0, 0]])
         # defensive move
         result, move = self.strat.eval_board(board, 1)
-        self.assertEqual(result, GameResult.DRAW)
+        self.assertEqual(result, 0)
         self.assertEqual(move, (2, 1))
 
         # offensive move
         result, move = self.strat.eval_board(board, 2)
-        self.assertEqual(result, GameResult.O_WINS)
+        self.assertEqual(result, 2)
         self.assertEqual(move, (2, 1))
 
     def test_mid_game(self):
@@ -54,12 +54,12 @@ class MinMaxTest(TestCase):
             [1, 0, 0]])
         # X's move
         result, move = self.strat.eval_board(board, 1)
-        self.assertEqual(result, GameResult.X_WINS)
+        self.assertEqual(result, 1)
         self.assertEqual(move, (2, 2))
 
         # O's move
         result, move = self.strat.eval_board(board, 2)
-        self.assertEqual(result, GameResult.DRAW)
+        self.assertEqual(result, 0)
 
     def test_open_game(self):
         board = Board([
@@ -68,8 +68,21 @@ class MinMaxTest(TestCase):
             [0, 0, 0]])
         # X's move
         result, move = self.strat.eval_board(board, 1)
-        self.assertEqual(result, GameResult.X_WINS)
-        # self.assertEqual(move, (1, 0))
+        self.assertEqual(result, 3)
+        print move
+
+        board.board[1][1] = 1
+        result, move = self.strat.eval_board(board, 2)
+        print result, move
+
+        role = CellState.PLAYER_O
+        for i in range(4):
+            row, col = move
+            board.board[row][col] = role
+            role = role.reverse_role()
+            result, move = self.strat.eval_board(board, role)
+            print role, result, move
+        # self.assertEqual(move, (1, 1))
 
 
 class MinMaxQTTest(TestCase):

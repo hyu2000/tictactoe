@@ -109,6 +109,9 @@ class Board(object):
     def print_board(self):
         self.print_board_with_last_move(-1, -1)
 
+    def num_stones(self):
+        return 9 - self.num_empty_squares()
+
     def num_empty_squares(self):
         num = sum([val == CellState.EMPTY for row in self.board for val in row])
         return num

@@ -80,61 +80,49 @@ class MinMaxStrat(Strategy):
         return 'MinMax'
 
     def next_move(self, board):
-        best_result, best_move = self.eval_board(board, self.role)
+        best_score, best_move = self.eval_board(board, self.role)
         if self.verbose:
-            print 'MinMax predicts', best_result.announce()
+            print 'MinMax predicts score= %d' % best_score
         return best_move
 
+    def _calc_score(self, role, result, steps):
+        """ role-specific score: the higher the better
+
+        score: 0 == DRAW, negative: losing, positive: winning
+        """
+        assert result != GameResult.UNFINISHED
+        if result is None:
+            return -100
+        if result == GameResult.DRAW:
+            return 0
+        if result == role:  # win
+            return 10 - steps
+        else:  # lose
+            return steps - 10
+
     def eval_board(self, board, role):
+        """ return: role-specific score, best_move
+        """
         next_role = CellState(role).reverse_role()
-        best_possible_result = None
-        best_move = None
+        current_best_score, best_move = -100, None
         for (row, col) in board.next_empty_square():
             try:
                 board.board[row][col] = role
-                result = board.evaluate()
+                result, num_stones = board.evaluate(), board.num_stones()
                 if result == GameResult.UNFINISHED:
-                    result, _ = self.eval_board(board, next_role)
-                if result == role:
-                    return result, (row, col)
-                elif result == GameResult.DRAW:
-                    # this will pick the last draw move, if several leads to draw
-                    best_possible_result = result
-                    best_move = (row, col)
-                elif best_move is None:
-                    # so that we can return a valid move if cannot draw
-                    best_possible_result = result
+                    # recurse
+                    score, _ = self.eval_board(board, next_role)
+                    score = -score
+                else:
+                    score = self._calc_score(role, result, num_stones)
+
+                if score > current_best_score:
+                    current_best_score = score
                     best_move = (row, col)
             finally:
                 board.board[row][col] = CellState.EMPTY
 
-        return best_possible_result, best_move
-
-
-class AntiMinMaxStrat(Strategy):
-    """ memorized plays against MinMaxStrat (above), otherwise quite dumb
-
-    This always ties against MinMax, but easily loses to RL
-    """
-    def __init__(self):
-        self.baseline = DefensiveStrat1(level=10)
-
-    def name(self):
-        return 'AntiMinMax'
-
-    def start_game(self, role):
-        self.role = role
-        self.baseline.start_game(role)
-
-    def next_move(self, board):
-        if self.role == CellState.PLAYER_X:
-            # only acts as O for now
-            raise NotImplementedError
-
-        if board.num_empty_squares() == 8 and board.board[1][1] == CellState.EMPTY:
-            return 1, 1
-
-        return self.baseline.next_move(board)
+        return current_best_score, best_move
 
 
 class MinMaxWithQTable(Strategy):
@@ -222,6 +210,34 @@ class WeakenedMinMax(Strategy):
             return self.baseline.next_move(board)
         best_possible_result, best_move = val
         return best_move
+
+
+class AntiMinMaxStrat(Strategy):
+    """ memorized plays against MinMaxStrat (above), otherwise quite dumb
+
+    This always ties against MinMax, but easily loses to RL
+    """
+
+    def __init__(self):
+        self.baseline = DefensiveStrat1(level=10)
+
+    def name(self):
+        return 'AntiMinMax'
+
+    def start_game(self, role):
+        self.role = role
+        self.baseline.start_game(role)
+
+    def next_move(self, board):
+        if self.role == CellState.PLAYER_X:
+            # only acts as O for now
+            raise NotImplementedError
+
+        if board.num_empty_squares() == 8 and board.board[1][1] == CellState.EMPTY:
+            return 1, 1
+
+        return self.baseline.next_move(board)
+
 
 # ------------------------------------------------------------------------------------------
 # below are some hand-crafted strategy
