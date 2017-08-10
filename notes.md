@@ -137,3 +137,13 @@ unfinished: 0.5 -> 0
 ```
 Still no progress. Bug? Indeed, we are missing one update from strat.end_game().
 With this fix RL ties most of the time with MinMax (all the time if we disable exploration)!
+
+However, this RL has only learned to play X. If we let it play as O against DefensiveStrat,
+it is just marginally better:
+```
+1000 runs: (X win, X lose, tie) = [0.379, 0.44, 0.181]
+```
+And it never won against MinMax:
+```
+1000 runs: (X win, X lose, tie) = [0.286, 0.0, 0.714]
+```
