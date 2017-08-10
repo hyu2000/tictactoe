@@ -60,6 +60,7 @@ class GamePlay(object):
 
 
 def train_RL(strat1, game):
+    assert strat1.learn_rate > 1e-6
     explore_rate = 0.1
     for i in range(10):
         strat1.set_explore_rate(explore_rate)
@@ -76,8 +77,8 @@ def test_RL(strat_rl, game):
 
     strat_rl.set_debug(True)
     game.run()
-
     strat_rl.set_debug(False)
+
     game.run_tournament(1000)
 
 
@@ -124,8 +125,8 @@ def save_minmax_qtable():
 if __name__ == '__main__':
     import strategies
 
-    # strat = strategies.MinMaxWithQTable()
-    strat = strategies.WeakenedMinMax('/tmp/minmax.qtable')
+    strat = strategies.MinMaxWithQTable()
+    # strat = strategies.WeakenedMinMax('/tmp/minmax.qtable')
 
     random.seed(time.time())
     rl_strat = run_RL_as_X_against(strat)

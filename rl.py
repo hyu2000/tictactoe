@@ -41,17 +41,17 @@ class RLStrat(Strategy):
         # this (EnumMap) is to speed up value_of() computation
         self.reward_mapping = {
             GameResult.from_role(self.role): 1.0,
-            GameResult.from_role(self.role.reverse_role()): 0,
+            GameResult.from_role(self.role.reverse_role()): -1.0,
             GameResult.DRAW: 0,
-            GameResult.UNFINISHED: 0.5
+            GameResult.UNFINISHED: 0
         }
 
     def end_game(self, game_result):
         # this could be an important update (if RL plays O)
         # if RL plays X, we already performed the final update if we chose 'exploit' in the last step
-        if self.role == CellState.PLAYER_O:
-            v_prime = self.reward_mapping[game_result]
-            self.update(self.prev_board_rep, v_prime)
+        # if self.role == CellState.PLAYER_O:
+        v_prime = self.reward_mapping[game_result]
+        self.update(self.prev_board_rep, v_prime)
 
     def next_move(self, board):
         # type: (Board) -> Tuple[int, int]
@@ -80,7 +80,7 @@ class RLStrat(Strategy):
 
     def exploit(self, board):
         q_best = -1e10
-        best_move = None
+        best_moves = []
         score_board = board.empty_score_board()
         for row, col in board.next_empty_square():
             board.board[row][col] = self.role
@@ -88,11 +88,16 @@ class RLStrat(Strategy):
             score_board[row][col] = '%.1f %g' % (10 * q_val, update_count)
             if q_val > q_best:
                 q_best = q_val
-                best_move = row, col
+                best_moves = [(row, col)]
+            elif q_val == q_best:  #
+                best_moves.append((row, col))
             board.board[row][col] = CellState.EMPTY
+
+        # randomize among best moves
+        move = random.choice(best_moves)
         if self.debug:
-            Board.print_score_board_with_highlight(score_board, best_move[0], best_move[1])
-        return q_best, best_move
+            Board.print_score_board_with_highlight(score_board, move[0], move[1])
+        return q_best, move
 
     def explore(self, board):
         num_choices = board.num_empty_squares()

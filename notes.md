@@ -40,8 +40,9 @@ Next, we explore a more worth opponent: weakened MinMax.
 
 To Weaken MinMax, I end up improve it first
 =============================
-I weaken minmax in exactly one state. In the following setup, minmax has to pick
-4 (center of the board). I changed it to pick 1 instead -- which would lead to a loss.
+I weaken minmax in exactly one state. In the opening move, X chose 2 (top right). 
+minmax (playing O) has to pick 4 (center of the board). I changed it to pick 1 
+instead -- which would lead to a loss.
 
 ```
 +--------------------------+
@@ -53,7 +54,7 @@ I weaken minmax in exactly one state. In the following setup, minmax has to pick
 ----------------------------
 ```
 
-If I move next on 4, strangely minmax picks 0, very bad. Why? 
+If X moves next on 4, minmax strangely picks 0. Very bad. Why? 
 ```
 +--------------------------+
 |  (O)  0|   O   1|   X   2|
@@ -109,3 +110,30 @@ on the designed configuration, it needs to play a while to figure out a way to w
 in this setup. It's playing against MinMax after all.
 
 Once the winning setup is revealed, RL exploits the trap all the time.
+
+
+RL (X) against MinMax (O)
+============================
+
+RL cannot seem to learn anything against MinMax:
+```
+10000 runs: (X win, X lose, tie) = [0.0, 0.995, 0.005]
+q_table size, #updates =  (326, 18473)
+
+...
+
+10000 runs: (X win, X lose, tie) = [0.0, 0.9964, 0.0036]
+q_table size, #updates =  (393, 184906)
+```
+After 100k games, it still lost mostly. The issue is the RL value function
+treats draw the same as loss.
+
+Let's change the reward function:
+```
+win: 1.0
+loss: 0 -> -1
+draw: 0
+unfinished: 0.5 -> 0
+```
+Still no progress. Bug? Indeed, we are missing one update from strat.end_game().
+With this fix RL ties most of the time with MinMax!
