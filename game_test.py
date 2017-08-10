@@ -3,7 +3,7 @@ import unittest
 import time
 
 from strategies import MinMaxStrat, AntiMinMaxStrat, DefensiveStrat1, MinMaxWithQTable, WeakenedMinMax
-from game_play import GamePlay
+from game_play import GamePlay, load_rl_strat
 from utils import GameResult
 
 
@@ -27,4 +27,11 @@ class Competition(unittest.TestCase):
 
         pctg = game.run_tournament(100)
         self.assertAlmostEqual(pctg[2], 1.0)
+
+    def test_RL(self):
+        rl_strat = load_rl_strat()
+        strat2 = WeakenedMinMax('/tmp/minmax.qtable')
+        game = GamePlay(rl_strat, strat2)
+        pctg = game.run_tournament(1000)
+        print pctg
 
