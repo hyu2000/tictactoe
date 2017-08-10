@@ -82,20 +82,23 @@ def test_RL(strat_rl, game):
     game.run_tournament(1000)
 
 
-def run_RL_as_X_against(strat2):
+def load_rl_strat():
+    from rl import RLStrat
+    strat1 = RLStrat(0.1)
+    if os.path.exists(PARAM_FILE):
+        strat1.q_table.load(PARAM_FILE)
+    return strat1
+
+
+def run_RL_as_X_against(rl_strat, strat2):
     """
     train an RL strategy, then test it. Training RL takes a bit of time, so we auto-save/load a parameter
     file (in PARAM_FILE)
     """
-    from rl import RLStrat
-    strat1 = RLStrat(0.1)
-    game = GamePlay(strat1, strat2)
-    if os.path.exists(PARAM_FILE):
-        strat1.q_table.load(PARAM_FILE)
+    game = GamePlay(rl_strat, strat2)
 
-    train_RL(strat1, game)
-    test_RL(strat1, game)
-    return strat1
+    train_RL(rl_strat, game)
+    test_RL (rl_strat, game)
 
 
 def run_manual_against(strat, human_as=CellState.PLAYER_X):
@@ -129,7 +132,8 @@ if __name__ == '__main__':
     # strat = strategies.WeakenedMinMax('/tmp/minmax.qtable')
 
     random.seed(time.time())
-    rl_strat = run_RL_as_X_against(strat)
+    rl_strat = load_rl_strat()
+    run_RL_as_X_against(rl_strat, strat)
 
     # when minmax goes first, we can never win, but you'll learn how to achieve a draw!
     # run_manual_against(strat)

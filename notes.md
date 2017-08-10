@@ -136,4 +136,4 @@ draw: 0
 unfinished: 0.5 -> 0
 ```
 Still no progress. Bug? Indeed, we are missing one update from strat.end_game().
-With this fix RL ties most of the time with MinMax!
+With this fix RL ties most of the time with MinMax (all the time if we disable exploration)!
